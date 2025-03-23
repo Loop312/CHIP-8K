@@ -1,4 +1,5 @@
 package io.github.chip8k
+import java.util.ArrayDeque
 
 class Cpu {
     //ram
@@ -11,7 +12,7 @@ class Cpu {
     var sp: Byte = 0 // 8-bit stack pointer
 
     //stack
-    var stack = ShortArray(16) // holds 16-bit addresses
+    var stack = ArrayDeque<Short>() // holds 16-bit addresses
 
     //timers
     var delayTimer: Byte = 0 // 8-bit register (timers are bytes for some reason)
@@ -45,25 +46,49 @@ class Cpu {
         */
         when (opcode and 0xF000) { //checks first 4 bits
 
-            0x0000 -> when (opcode and 0x000F) { //checks last 4 bits
-                0x0000 -> {} //0x00E0 clears the screen
-                0x000E -> {} //0x00EE returns from a subroutine
-                else -> println("opcode not yet implemented: $opcode") //
+            0x0000 -> when (opcode and 0x00FF) { //checks last 8 bits
+                0x00E0 -> {cls()} //0x00E0 clears the screen
+                0x00EE -> {ret()} //0x00EE returns from a subroutine
+                else -> println("opcode not yet implemented: " + opcode.toString(16)) //
             }
             //1NNN	Flow	goto NNN;	Jumps to address NNN
-            0x1000 -> {println("opcode not yet implemented: $opcode")}
+            0x1000 -> {
+                jumpTo(opcode and 0x0FFF)
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //2NNN	Flow	*(0xNNN)()	Calls subroutine at NNN
-            0x2000 -> {println("opcode not yet implemented: $opcode")}
+            0x2000 -> {
+                call(opcode and 0x0FFF)
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //3XNN	Cond	if (Vx == NN)	Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block)
-            0x3000 -> {println("opcode not yet implemented: $opcode")}
+            0x3000 -> {
+                //if (vx == nn)
+                skip(opcode)
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //4XNN	Cond	if (Vx != NN)	Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
-            0x4000 -> {println("opcode not yet implemented: $opcode")}
+            0x4000 -> {
+                //if (vx != nn)
+                skip(opcode)
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //5XY0	Cond	if (Vx == Vy)	Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block)
-            0x5000 -> {println("opcode not yet implemented: $opcode")}
+            0x5000 -> {
+                //if (vx == vy)
+                skip(opcode)
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //6XNN	Const	Vx = NN	Sets VX to NN.
-            0x6000 -> {println("opcode not yet implemented: $opcode")}
+            0x6000 -> {
+                set(opcode, opcode)
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //7XNN	Const	Vx += NN	Adds NN to VX (carry flag is not changed)
-            0x7000 -> {println("opcode not yet implemented: $opcode")}
+            0x7000 -> {
+                set(opcode, opcode) //don't uses set(), its a placeholder
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //8XY0	Assig	Vx = Vy	Sets VX to the value of VY.
             //8XY1	BitOp	Vx |= Vy	Sets VX to VX or VY. (bitwise OR operation).
             //8XY2	BitOp	Vx &= Vy	Sets VX to VX and VY. (bitwise AND operation).
@@ -73,24 +98,46 @@ class Cpu {
             //8XY6	BitOp	Vx >>= 1	Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF.
             //8XY7	Math	Vx = Vy - Vx	Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
             //8XYE	BitOp	Vx <<= 1	Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset.
-            0x8000 -> {println("opcode not yet implemented: $opcode")}
+            0x8000 -> {
+                //bunch of stuff, add in when statement
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //9XY0	Cond	if (Vx != Vy)	Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block)
-            0x9000 -> {println("opcode not yet implemented: $opcode")}
+            0x9000 -> {
+                //if (vx != vy)
+                skip(opcode)
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //ANNN	MEM	I = NNN	Sets I to the address NNN
-            0xA000 -> {println("opcode not yet implemented: $opcode")}
+            0xA000 -> {
+                set(opcode, opcode)
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //BNNN	Flow	PC = V0 + NNN	Jumps to the address NNN plus V0.
-            0xB000 -> {println("opcode not yet implemented: $opcode")}
+            0xB000 -> {
+                jumpTo(opcode) //this jump is different, so this is a placeholder
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //CXNN	Rand	Vx = rand() & NN	Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
-            0xC000 -> {println("opcode not yet implemented: $opcode")}
+            0xC000 -> {
+                set(opcode, opcode) //placeholder
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //DXYN	Display	draw(Vx, Vy, N)
             /*Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
             Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change
             after the execution of this instruction. As described above, VF is set to 1 if any screen pixels
             are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen*/
-            0xD000 -> {println("opcode not yet implemented: $opcode")}
+            0xD000 -> {
+                draw(opcode)
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //EX9E	KeyOp	if (key() == Vx)	Skips the next instruction if the key stored in VX(only consider the lowest nibble) is pressed (usually the next instruction is a jump to skip a code block)
             //EXA1	KeyOp	if (key() != Vx)	Skips the next instruction if the key stored in VX(only consider the lowest nibble) is not pressed (usually the next instruction is a jump to skip a code block)
-            0xE000 -> {println("opcode not yet implemented: $opcode")}
+            0xE000 -> {
+                //keyhandler stuff
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
             //FX07	Timer	Vx = get_delay()	Sets VX to the value of the delay timer
             //FX0A	KeyOp	Vx = get_key()	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event, delay and sound timers should continue processing)
             //FX15	Timer	delay_timer(Vx)	Sets the delay timer to VX.
@@ -107,8 +154,11 @@ class Cpu {
             //Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
             //FX55	MEM	reg_dump(Vx, &I)	Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.
             //FX65	MEM	reg_load(Vx, &I)	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified
-            0xF000 -> {println("opcode not yet implemented: $opcode")}
-            else -> {println("INVALID OPCODE GIVEN: $opcode")}
+            0xF000 -> {
+                //bunch of stuff
+                println("opcode not yet implemented: " + opcode.toString(16))
+            }
+            else -> {println("INVALID OPCODE GIVEN: " + opcode.toString(16))}
         }
     }
 
@@ -141,5 +191,40 @@ class Cpu {
             //increment program counter
             break //get rid of later
         }
+    }
+
+    //clears the screen
+    fun cls() {
+
+    }
+
+    //returns
+    fun ret() {
+
+    }
+
+    //jumps to addr
+    fun jumpTo(addr: Int) {
+
+    }
+
+    //calls addr
+    fun call(addr: Int) {
+
+    }
+
+    //skips the next instruction
+    fun skip(addr: Int) {
+
+    }
+
+    //sets addr1 to addr2
+    fun set(addr1: Int, addr2: Int) {
+
+    }
+
+    //draws a sprite
+    fun draw(addr: Int) {
+
     }
 }
