@@ -1,5 +1,6 @@
 package io.github.chip8k
 import java.util.ArrayDeque
+import kotlin.random.Random
 
 class Cpu {
     //ram
@@ -9,7 +10,6 @@ class Cpu {
     var v = ByteArray(16) // 16 general purpose 8-bit registers
     var i: Short = 0 // 16-bit register for memory address (the index)
     var pc: Short = 0x200.toShort() // 16-bit program counter (starts at 0x200 or 0000 0010 0000 0000)
-    var sp: Byte = 0 // 8-bit stack pointer
 
     //stack
     var stack = ArrayDeque<Short>() // holds 16-bit addresses
@@ -44,49 +44,57 @@ class Cpu {
         N: 4-bit constant
         X and Y: 4-bit register identifier
         */
-        when (opcode and 0xF000) { //checks first 4 bits
+        val nib0 = (opcode and 0xF000) shr 12
+        val nib1 = (opcode and 0x0F00) shr 8
+        val nib2 = (opcode and 0x00F0) shr 4
+        val nib3 = opcode and 0x000F
+        when (nib0) { //checks first nibble
 
-            0x0000 -> when (opcode and 0x00FF) { //checks last 8 bits
+            0x0 -> when (opcode and 0x00FF) { //checks last 2 nibbles
                 0x00E0 -> {cls()} //0x00E0 clears the screen
                 0x00EE -> {ret()} //0x00EE returns from a subroutine
                 else -> println("opcode not yet implemented: " + opcode.toString(16)) //
             }
             //1NNN	Flow	goto NNN;	Jumps to address NNN
-            0x1000 -> {
+            0x1 -> {
+                //jump to address corresponding to last 3 nibbles
                 jumpTo(opcode and 0x0FFF)
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //2NNN	Flow	*(0xNNN)()	Calls subroutine at NNN
-            0x2000 -> {
+            0x2 -> {
+                //call subroutine at last 3 nibbles
                 call(opcode and 0x0FFF)
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //3XNN	Cond	if (Vx == NN)	Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block)
-            0x3000 -> {
+            0x3 -> {
                 //if (vx == nn)
-                skip(opcode)
+                skip()
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //4XNN	Cond	if (Vx != NN)	Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
-            0x4000 -> {
+            0x4 -> {
                 //if (vx != nn)
-                skip(opcode)
+                skip()
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //5XY0	Cond	if (Vx == Vy)	Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block)
-            0x5000 -> {
+            0x5 -> {
                 //if (vx == vy)
-                skip(opcode)
+                skip()
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //6XNN	Const	Vx = NN	Sets VX to NN.
-            0x6000 -> {
-                set(opcode, opcode)
+            0x6 -> {
+                //set v[nib1] to last 2 nibbles
+                set(nib1, (opcode and 0x00FF))
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //7XNN	Const	Vx += NN	Adds NN to VX (carry flag is not changed)
-            0x7000 -> {
-                set(opcode, opcode) //don't uses set(), its a placeholder
+            0x7 -> {
+                //add to v[nib1] last 2 nibbles
+                add(nib1, (opcode and 0x00FF))
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //8XY0	Assig	Vx = Vy	Sets VX to the value of VY.
@@ -98,29 +106,31 @@ class Cpu {
             //8XY6	BitOp	Vx >>= 1	Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF.
             //8XY7	Math	Vx = Vy - Vx	Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
             //8XYE	BitOp	Vx <<= 1	Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset.
-            0x8000 -> {
+            0x8 -> {
                 //bunch of stuff, add in when statement
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //9XY0	Cond	if (Vx != Vy)	Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block)
-            0x9000 -> {
+            0x9 -> {
                 //if (vx != vy)
-                skip(opcode)
+                skip()
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //ANNN	MEM	I = NNN	Sets I to the address NNN
-            0xA000 -> {
-                set(opcode, opcode)
+            0xA -> {
+                //set i to last 3 nibbles
+                i = (opcode and 0x0FFF).toShort()
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //BNNN	Flow	PC = V0 + NNN	Jumps to the address NNN plus V0.
-            0xB000 -> {
-                jumpTo(opcode) //this jump is different, so this is a placeholder
+            0xB -> {
+                jumpTo(v[0] + (opcode and 0x0FFF))
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //CXNN	Rand	Vx = rand() & NN	Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
-            0xC000 -> {
-                set(opcode, opcode) //placeholder
+            0xC -> {
+                //set v[nib1] to random "and" last 2 nibbles
+                set(nib1, Random.nextInt(0, 255) and (opcode and 0x00FF))
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //DXYN	Display	draw(Vx, Vy, N)
@@ -128,13 +138,13 @@ class Cpu {
             Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change
             after the execution of this instruction. As described above, VF is set to 1 if any screen pixels
             are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen*/
-            0xD000 -> {
+            0xD -> {
                 draw(opcode)
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
             //EX9E	KeyOp	if (key() == Vx)	Skips the next instruction if the key stored in VX(only consider the lowest nibble) is pressed (usually the next instruction is a jump to skip a code block)
             //EXA1	KeyOp	if (key() != Vx)	Skips the next instruction if the key stored in VX(only consider the lowest nibble) is not pressed (usually the next instruction is a jump to skip a code block)
-            0xE000 -> {
+            0xE -> {
                 //keyhandler stuff
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
@@ -154,7 +164,7 @@ class Cpu {
             //Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
             //FX55	MEM	reg_dump(Vx, &I)	Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.
             //FX65	MEM	reg_load(Vx, &I)	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified
-            0xF000 -> {
+            0xF -> {
                 //bunch of stuff
                 println("opcode not yet implemented: " + opcode.toString(16))
             }
@@ -182,8 +192,8 @@ class Cpu {
     //
     fun run() {
         while (true) {
-            //fetch
-            //decode
+            //fetch opcode and decode
+            decode(fetch())
             //execute
             //update timers
             //handle inputs
@@ -198,29 +208,35 @@ class Cpu {
 
     }
 
-    //returns
+    //returns from a subroutine
     fun ret() {
-
+        pc = stack.pop()
     }
 
     //jumps to addr
     fun jumpTo(addr: Int) {
-
+        pc = addr.toShort()
     }
 
-    //calls addr
+    //calls addr/subroutine
     fun call(addr: Int) {
-
+        stack.push(pc)
+        pc = addr.toShort()
     }
 
     //skips the next instruction
-    fun skip(addr: Int) {
-
+    fun skip() {
+        pc = (pc + 2).toShort()
     }
 
-    //sets addr1 to addr2
-    fun set(addr1: Int, addr2: Int) {
+    //sets v[b1] to last byte of opcode
+    fun set(nib: Int, opcode: Int) {
+        v[nib] = (opcode and 0x00FF).toByte()
+    }
 
+    //
+    fun add(nib: Int, opcode: Int) {
+        v[nib] = (v[nib] + (opcode and 0x00FF)).toByte()
     }
 
     //draws a sprite
