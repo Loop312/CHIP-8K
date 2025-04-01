@@ -229,14 +229,14 @@ class Cpu {
         pc = (pc + 2).toShort()
     }
 
-    //sets v[b1] to last byte of opcode
-    fun set(nib: Int, opcode: Int) {
-        v[nib] = (opcode and 0x00FF).toByte()
+    //sets v[nib1] to last byte of opcode
+    fun set(register: Int, opcode: Int) {
+        v[register] = (opcode and 0x00FF).toByte()
     }
 
     //
-    fun add(nib: Int, opcode: Int) {
-        v[nib] = (v[nib] + (opcode and 0x00FF)).toByte()
+    fun add(register: Int, opcode: Int) {
+        v[register] = (v[register] + (opcode and 0x00FF)).toByte()
     }
 
     //draws a sprite
