@@ -1,0 +1,37 @@
+name: Build Gradle project
+
+on:
+  push:
+
+jobs:
+  build-gradle-project:
+    runs-on: windows-latest
+    steps:
+
+      - name: Checkout project sources
+        uses: actions/checkout@v4
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          build-scan-publish: true
+          build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
+          build-scan-terms-of-use-agree: "yes"
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'  # or 'microsoft' or 'corretto' or temurin
+          java-version: '21'  # or specify a different version
+
+      - name: Build For Windows
+        run: ./gradlew jpackageImage
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chip-8K
+          path: D:\a\CHIP-8K\CHIP-8K\build\jpackage\Chip-8K
