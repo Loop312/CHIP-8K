@@ -5,11 +5,14 @@ import javafx.application.Application
 import javafx.stage.Stage
 import java.io.InputStream
 
+
+var running = false
+lateinit var loadedRom: ByteArray
+
 class Chip8 : Application() {
     private val cpu = Cpu()
     private val gpu = Gpu()
     private val keyHandler = KeyHandler()
-    private var running = false
 
     override fun start(stage: Stage) {
         cpu.gpu = gpu
@@ -25,8 +28,8 @@ class Chip8 : Application() {
         if (inputStream == null) { println("rom not found") }
 
         if (inputStream != null) {
-            val rom = inputStream.readBytes()
-            cpu.loadProgram(rom)
+            loadedRom = inputStream.readBytes()
+            cpu.loadProgram(loadedRom)
             running = true
             val timer = object : AnimationTimer() {
                 private var lastUpdateTime: Long = 0
@@ -34,9 +37,10 @@ class Chip8 : Application() {
                 override fun handle(now: Long) {
                     if (now - lastUpdateTime >= 16_666_666) {
                         if (running) {
+                            gpu.handleLogs()
+                            gpu.updateDisplay()
                             cpu.runCycle()
                             cpu.updateTimers()
-                            gpu.updateDisplay()
                             lastUpdateTime = now
                         }
                     }

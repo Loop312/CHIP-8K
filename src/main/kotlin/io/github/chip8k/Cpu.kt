@@ -37,6 +37,7 @@ class Cpu {
         0xF0.toByte(), 0x80.toByte(), 0xF0.toByte(), 0x80.toByte(), 0xF0.toByte(), // E
         0xF0.toByte(), 0x80.toByte(), 0xF0.toByte(), 0x80.toByte(), 0x80.toByte()  // F
     )
+    var log = ""
 
     lateinit var gpu: Gpu
     lateinit var keyHandler: KeyHandler
@@ -87,46 +88,46 @@ class Cpu {
             0x1 -> {
                 //jump to address corresponding to last 3 nibbles
                 jumpTo(opcode and 0x0FFF)
-                println("opcode: " + opcode.toString(16))
+                log(opcode,"jump to address")
             }
             //2NNN	Flow	*(0xNNN)()	Calls subroutine at NNN
             0x2 -> {
                 //call subroutine at last 3 nibbles
                 call(opcode and 0x0FFF)
-                println("opcode: " + opcode.toString(16))
+                log(opcode,"call subroutine at address")
             }
             //3XNN	Cond	if (Vx == NN)	Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block)
             0x3 -> {
                 if (v[nib1] == (opcode and 0x00FF).toByte()) {
                     skip()
                 }
-                println("opcode: " + opcode.toString(16))
+                log(opcode, "skip if v[nib1] = last 2 nibbles")
             }
             //4XNN	Cond	if (Vx != NN)	Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
             0x4 -> {
                 if (v[nib1] != (opcode and 0x00FF).toByte()) {
                     skip()
                 }
-                println("opcode: " + opcode.toString(16))
+                log(opcode, "skip if v[nib1] != last 2 nibbles")
             }
             //5XY0	Cond	if (Vx == Vy)	Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block)
             0x5 -> {
                 if (v[nib1] == v[nib2]) {
                     skip()
                 }
-                println("opcode: " + opcode.toString(16))
+                log(opcode, "skip if v[nib1] = v[nib2]")
             }
             //6XNN	Const	Vx = NN	Sets VX to NN.
             0x6 -> {
                 //set v[nib1] to last 2 nibbles
                 set(nib1, (opcode and 0x00FF))
-                println("opcode: " + opcode.toString(16))
+                log(opcode, "set v[nib1] to last 2 nibbles")
             }
             //7XNN	Const	Vx += NN	Adds NN to VX (carry flag is not changed)
             0x7 -> {
                 //add to v[nib1] last 2 nibbles
                 add(nib1, (opcode and 0x00FF))
-                println("opcode: " + opcode.toString(16))
+                log(opcode, "v[nib1] += last 2 nibbles")
             }
             //8XY0	Assig	Vx = Vy	Sets VX to the value of VY.
             //8XY1	BitOp	Vx |= Vy	Sets VX to VX or VY. (bitwise OR operation).
@@ -146,24 +147,24 @@ class Cpu {
                 if (v[nib1] != v[nib2]) {
                     skip()
                 }
-                println("opcode: " + opcode.toString(16))
+                log (opcode, "skip if v[nib1] != v[nib2]")
             }
             //ANNN	MEM	I = NNN	Sets I to the address NNN
             0xA -> {
                 //set i to last 3 nibbles
                 i = (opcode and 0x0FFF).toShort()
-                println("opcode: " + opcode.toString(16))
+                log(opcode, "set i to last 3 nibbles")
             }
             //BNNN	Flow	PC = V0 + NNN	Jumps to the address NNN plus V0.
             0xB -> {
                 jumpTo(v[0] + (opcode and 0x0FFF))
-                println("opcode: " + opcode.toString(16))
+                log(opcode, "jump to v[0] + last 3 nibbles")
             }
             //CXNN	Rand	Vx = rand() & NN	Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
             0xC -> {
                 //set v[nib1] to random "and" last 2 nibbles
                 set(nib1, Random.nextInt(0, 255) and (opcode and 0x00FF))
-                println("opcode: " + opcode.toString(16))
+                log(opcode, "set v[nib1] to random \"and\" last 2 nibbles")
             }
             //DXYN	Display	draw(Vx, Vy, N)
             /*Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
@@ -172,7 +173,7 @@ class Cpu {
             are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen*/
             0xD -> {
                 draw(v[nib1], v[nib2], nib3)
-                println("opcode: " + opcode.toString(16))
+                log(opcode, "draw sprite")
             }
             //EX9E	KeyOp	if (key() == Vx)	Skips the next instruction if the key stored in VX(only consider the lowest nibble) is pressed (usually the next instruction is a jump to skip a code block)
             //EXA1	KeyOp	if (key() != Vx)	Skips the next instruction if the key stored in VX(only consider the lowest nibble) is not pressed (usually the next instruction is a jump to skip a code block)
@@ -215,8 +216,6 @@ class Cpu {
         decode(fetch())
         //handle inputs
         keyHandler.handleInputs()
-        //update display
-        gpu.updateDisplay()
     }
 
     //clears the screen
@@ -262,5 +261,30 @@ class Cpu {
         val y = registerY.toInt() % 32
 
         gpu.draw(x, y, height)
+    }
+
+    fun reset() {
+        //ram
+        memory = ByteArray(4096)
+
+        //registers
+        v = ByteArray(16) // 16 general purpose 8-bit registers
+        i = 0 // 16-bit register for memory address (the index)
+        pc = 0x200.toShort() // 16-bit program counter (starts at 0x200 or 0000 0010 0000 0000)
+
+        //stack
+        stack = ArrayDeque<Short>() // holds 16-bit addresses
+
+        //timers
+        delayTimer = 0 // 8-bit register (timers are bytes for some reason)
+        soundTimer = 0 // 8-bit register
+
+        cls()
+        gpu.updateDisplay()
+    }
+
+    fun log(opcode: Int, description: String) {
+        println("opcode: 0x" + opcode.toString(16) + "      description: " + description)
+        log = "opcode: 0x" + opcode.toString(16) + "      description: " + description
     }
 }
