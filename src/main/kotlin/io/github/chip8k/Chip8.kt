@@ -20,7 +20,10 @@ class Chip8 : Application() {
         stage.scene = gpu.scene
         stage.show()
 
-        val inputStream: InputStream? = javaClass.classLoader.getResourceAsStream("roms/IBM Logo.ch8")
+        println("loading roms/ibm.ch8")
+        val inputStream: InputStream? = javaClass.classLoader.getResourceAsStream("ibm.ch8")
+        if (inputStream == null) { println("rom not found") }
+
         if (inputStream != null) {
             val rom = inputStream.readBytes()
             cpu.loadProgram(rom)
