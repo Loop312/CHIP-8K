@@ -80,8 +80,8 @@ class Cpu {
         when (nib0) { //checks first nibble
 
             0x0 -> when (opcode and 0x00FF) { //checks last 2 nibbles
-                0x00E0 -> {cls()} //0x00E0 clears the screen
-                0x00EE -> {ret()} //0x00EE returns from a subroutine
+                0x00E0 -> {cls(); log(opcode,"clear screen")} //0x00E0 clears the screen
+                0x00EE -> {ret(); log(opcode,"return from subroutine")} //0x00EE returns from a subroutine
                 else -> println("invalid opcode: " + opcode.toString(16)) //
             }
             //1NNN	Flow	goto NNN;	Jumps to address NNN
@@ -140,14 +140,14 @@ class Cpu {
             //8XYE	BitOp	Vx <<= 1	Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset.
             0x8 -> {
                 //bunch of stuff, add in when statement
-                println("opcode not yet implemented: " + opcode.toString(16))
+                log(opcode, "NOT YET IMPLEMENTED")
             }
             //9XY0	Cond	if (Vx != Vy)	Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block)
             0x9 -> {
                 if (v[nib1] != v[nib2]) {
                     skip()
                 }
-                log (opcode, "skip if v[nib1] != v[nib2]")
+                log(opcode, "skip if v[nib1] != v[nib2]")
             }
             //ANNN	MEM	I = NNN	Sets I to the address NNN
             0xA -> {
@@ -179,7 +179,7 @@ class Cpu {
             //EXA1	KeyOp	if (key() != Vx)	Skips the next instruction if the key stored in VX(only consider the lowest nibble) is not pressed (usually the next instruction is a jump to skip a code block)
             0xE -> {
                 //keyhandler stuff
-                println("opcode not yet implemented: " + opcode.toString(16))
+                log(opcode, "NOT YET IMPLEMENTED")
             }
             //FX07	Timer	Vx = get_delay()	Sets VX to the value of the delay timer
             //FX0A	KeyOp	Vx = get_key()	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event, delay and sound timers should continue processing)
@@ -199,7 +199,7 @@ class Cpu {
             //FX65	MEM	reg_load(Vx, &I)	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified
             0xF -> {
                 //bunch of stuff
-                println("opcode not yet implemented: " + opcode.toString(16))
+                log(opcode, "NOT YET IMPLEMENTED")
             }
             else -> {println("INVALID OPCODE GIVEN: " + opcode.toString(16))}
         }
