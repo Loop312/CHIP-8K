@@ -1,13 +1,13 @@
 package io.github.chip8k
 
 import javafx.event.EventHandler
+import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.Button
 import javafx.scene.control.TextArea
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.VBox
-import javafx.scene.paint.Color
 import javafx.stage.FileChooser
 import java.io.File
 
@@ -17,11 +17,8 @@ class Gpu {
     //true = on, false = off
     var display = Array(64) {BooleanArray(32)}
 
-
-    val scale = 10.0
-
     //actual display
-    val screen = Canvas(64 * scale, 32 * scale)
+    val screen = Canvas(64 * settings.scale, 32 * settings.scale)
     //log of opcodes that are going through
     val opcodeTextArea = TextArea()
     //buttons (4x6 grid)
@@ -48,7 +45,8 @@ class Gpu {
                 keypadScreen.add(button, x, y)
             }
         }
-        //power and load another rom buttons
+        //buttons
+        loadRomScreen.alignment = Pos.CENTER
         val powerButton = Button("power")
         powerButton.onAction = EventHandler {
             if (running) {
@@ -93,7 +91,12 @@ class Gpu {
                 cpu.log(0, "File selection cancelled")
             }
         }
-        loadRomScreen.children.addAll(powerButton, loadRomButton, pauseButton)
+
+        val settingsButton = Button("settings")
+        settingsButton.onAction = EventHandler {
+
+        }
+        loadRomScreen.children.addAll(powerButton, loadRomButton, pauseButton, settingsButton)
 
         root.add(screen, 0, 0)
         root.add(opcodeTextArea, 0, 1)
@@ -127,11 +130,11 @@ class Gpu {
         for (y in 0 until 32) {
             for (x in 0 until 64) {
                 if (display[x][y]) {
-                    gc.fill = Color.WHITE
+                    gc.fill = settings.colours.first
                 } else {
-                    gc.fill = Color.BLACK
+                    gc.fill = settings.colours.second
                 }
-                gc.fillRect(x * scale, y * scale, scale, scale)
+                gc.fillRect(x * settings.scale, y * settings.scale, settings.scale, settings.scale)
             }
         }
     }

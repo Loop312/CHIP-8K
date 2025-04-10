@@ -8,6 +8,7 @@ import java.io.InputStream
 
 var running = false
 lateinit var loadedRom: ByteArray
+val settings = Settings()
 
 class Chip8 : Application() {
     private val cpu = Cpu()
@@ -35,7 +36,7 @@ class Chip8 : Application() {
                 private var lastUpdateTime: Long = 0
 
                 override fun handle(now: Long) {
-                    if (now - lastUpdateTime >= 16_666_666) {
+                    if (now - lastUpdateTime >= settings.delayInNs) {
                         if (running) {
                             gpu.handleLogs()
                             gpu.updateDisplay()
