@@ -39,9 +39,6 @@ class Cpu {
     )
     var log = ""
 
-    lateinit var gpu: Gpu
-    lateinit var keyHandler: KeyHandler
-
     //loads font into memory
     init {
         font.copyInto(memory, 0x50)

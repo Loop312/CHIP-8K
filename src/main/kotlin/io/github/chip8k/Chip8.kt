@@ -7,19 +7,18 @@ import java.io.InputStream
 
 
 var running = false
+var paused = false
 lateinit var loadedRom: ByteArray
+val cpu = Cpu()
 val settings = Settings()
+val gpu = Gpu()
+val keyHandler = KeyHandler()
+
 
 class Chip8 : Application() {
-    private val cpu = Cpu()
-    private val gpu = Gpu()
-    private val keyHandler = KeyHandler()
+
 
     override fun start(stage: Stage) {
-        cpu.gpu = gpu
-        cpu.keyHandler = keyHandler
-        gpu.cpu = cpu
-
         stage.title = "CHIP-8K"
         stage.scene = gpu.scene
         stage.show()
@@ -37,7 +36,7 @@ class Chip8 : Application() {
 
                 override fun handle(now: Long) {
                     if (now - lastUpdateTime >= settings.delayInNs) {
-                        if (running) {
+                        if (running && !paused) {
                             gpu.handleLogs()
                             gpu.updateDisplay()
                             cpu.runCycle()

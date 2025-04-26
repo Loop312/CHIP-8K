@@ -6,8 +6,12 @@ import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.Button
 import javafx.scene.control.TextArea
+import javafx.scene.layout.Background
+import javafx.scene.layout.BackgroundFill
 import javafx.scene.layout.GridPane
+import javafx.scene.layout.StackPane
 import javafx.scene.layout.VBox
+import javafx.scene.paint.Color
 import javafx.stage.FileChooser
 import java.io.File
 
@@ -24,21 +28,20 @@ class Gpu {
     //buttons (4x6 grid)
     val keypadScreen = GridPane()
     //power and load another rom buttons
-    val loadRomScreen = VBox(10.0)
+    val menuScreen = VBox(10.0)
 
-    val root = GridPane()
+    var buttons = emptyArray<Button>()
+
+    val mainScreen = GridPane()
+    val root = StackPane(mainScreen, settings.popup)
     val scene = Scene(root)
 
-    lateinit var cpu: Cpu
-
     init {
-        //log of opcodes that are going through
-        opcodeTextArea.isEditable = false
-
         //buttons (4x4 grid) (need to change the order of the buttons)
         for (y in 0 until 4) {
             for (x in 0 until 4) {
                 val button = Button ((y * 4 + x).toString(16))
+                buttons += button
                 button.onAction = EventHandler {
                     cpu.log(0, "pressed button " + (y * 4 + x).toString(16))
                 }
@@ -46,8 +49,9 @@ class Gpu {
             }
         }
         //buttons
-        loadRomScreen.alignment = Pos.CENTER
+        menuScreen.alignment = Pos.CENTER
         val powerButton = Button("power")
+        buttons += powerButton
         powerButton.onAction = EventHandler {
             if (running) {
                 cpu.log(0, "powering off")
@@ -63,18 +67,12 @@ class Gpu {
         }
 
         val pauseButton = Button("toggle pause")
+        buttons += pauseButton
         pauseButton.onAction = EventHandler {
-            if (running) {
-                cpu.log(0, "emulation paused")
-                handleLogs()
-                running = false
-            }
-            else {
-                cpu.log(0, "emulation resumed")
-                running = true
-            }
+            togglePause()
         }
         val loadRomButton = Button("load rom")
+        buttons += loadRomButton
         loadRomButton.onAction = EventHandler {
             cpu.log(0, "loading another rom")
 
@@ -93,15 +91,29 @@ class Gpu {
         }
 
         val settingsButton = Button("settings")
+        buttons += settingsButton
         settingsButton.onAction = EventHandler {
-
+            settings.showPopup()
         }
-        loadRomScreen.children.addAll(powerButton, loadRomButton, pauseButton, settingsButton)
 
-        root.add(screen, 0, 0)
-        root.add(opcodeTextArea, 0, 1)
-        root.add(keypadScreen, 1, 0)
-        root.add(loadRomScreen, 1, 1)
+        val toggleThemeButton = Button("toggle theme")
+        buttons += toggleThemeButton
+        toggleThemeButton.onAction = EventHandler {
+            if (settings.colours.first == Color.WHITE) {
+                settings.colours = Pair(Color.BLACK, Color.WHITE)
+            } else {
+                settings.colours = Pair(Color.WHITE, Color.BLACK)
+            }
+            settings.flipStops()
+            updateAllGraphics()
+        }
+        menuScreen.children.addAll(powerButton, loadRomButton, pauseButton, settingsButton, toggleThemeButton)
+
+        updateAllGraphics()
+        mainScreen.add(screen, 0, 0)
+        mainScreen.add(opcodeTextArea, 0, 1)
+        mainScreen.add(keypadScreen, 1, 0)
+        mainScreen.add(menuScreen, 1, 1)
     }
     fun draw(x: Int, y: Int, height: Int) {
         cpu.v[0xF] = 0.toByte() //collision register defaults to off
@@ -143,5 +155,37 @@ class Gpu {
         val scrollTop = opcodeTextArea.scrollTop // Get the current vertical scroll position
         opcodeTextArea.appendText(cpu.log + "\n")
         opcodeTextArea.scrollTop = scrollTop // Restore the previous vertical scroll position
+    }
+
+    fun togglePause() {
+        if (!paused) {
+            cpu.log(0, "emulation paused")
+            handleLogs()
+            paused = true
+        }
+        else {
+            cpu.log(0, "emulation resumed")
+            paused = false
+        }
+    }
+
+    fun updateAllGraphics() {
+        mainScreen.background = Background(BackgroundFill(settings.colours.second, null, null))
+        opcodeTextArea.style = """
+        -fx-control-inner-background: rgb(
+         ${settings.colours.second.red * 255},
+         ${settings.colours.second.green * 255},
+         ${settings.colours.second.blue * 255});
+
+        -fx-text-fill: rgb(
+        ${settings.colours.first.red * 255},
+        ${settings.colours.first.green * 255},
+        ${settings.colours.first.blue * 255});
+    """.trimIndent()
+        for (button in buttons) {
+            button.background = Background(BackgroundFill(settings.gradient, null, null))
+            button.textFill = settings.colours.second
+        }
+        updateDisplay()
     }
 }
