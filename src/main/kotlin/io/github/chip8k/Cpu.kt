@@ -242,50 +242,91 @@ class Cpu {
             //bunch of stuff
             0xF -> {
                 when (nib2) {
-                    //FX07	Timer	Vx = get_delay()	Sets VX to the value of the delay timer
-                    //FX0A	KeyOp	Vx = get_key()	A key press is awaited, and then stored in VX
-                    //(blocking operation, all instruction halted until next key event, delay and sound timers should continue processing)
                     0x0 -> {
                         when (nib3) {
+                            //FX07	Timer	Vx = get_delay()	Sets VX to the value of the delay timer
                             0x7 -> {}
-                            0xA -> {}
+                            //FX0A	KeyOp	Vx = get_key()	A key press is awaited, and then stored in VX
+                            //(blocking operation, all instruction halted until next key event, delay and sound timers should continue processing)
+                            0xA -> {
+                                keyHandler.waiting = true
+                                while (keyHandler.waiting) {
+                                    for (keys in keyHandler.keys.indices) {
+                                        if (keyHandler.keyDown(keys)) {
+                                            v[nib1] = keys.toByte()
+                                            keyHandler.waiting = false
+                                            break
+                                        }
+                                    }
+                                }
+                            }
                             else -> log(opcode, "INVALID")
                         }
                     }
-                    //FX15	Timer	delay_timer(Vx)	Sets the delay timer to VX.
-                    //FX18	Sound	sound_timer(Vx)	Sets the sound timer to VX.
-                    //FX1E	MEM	I += Vx	Adds VX to I. VF is not affected.
                     0x1 -> {
-
+                        when (nib3) {
+                            //FX15	Timer	delay_timer(Vx)	Sets the delay timer to VX.
+                            0x5-> {}
+                            //FX18	Sound	sound_timer(Vx)	Sets the sound timer to VX.
+                            0x8-> {}
+                            //FX1E	MEM	I += Vx	Adds VX to I. VF is not affected.
+                            0xE-> {
+                                i = (i.toInt() + v[nib1]).toShort()
+                                log(opcode, "i += v[nib1]")
+                            }
+                            else -> log(opcode, "INVALID")
+                        }
                     }
-                    //FX29	MEM	I = sprite_addr[Vx]	Sets I to the location of the sprite for the character in VX(only consider the lowest nibble).
-                    //Characters 0-F (in hexadecimal) are represented by a 4x5 font
                     0x2 -> {
-
+                        //FX29	MEM	I = sprite_addr[Vx]	Sets I to the location of the sprite for the character in VX(only consider the lowest nibble).
+                        //Characters 0-F (in hexadecimal) are represented by a 4x5 font
+                        if (nib3 == 0x9) {
+                            i = (v[nib1].toInt() * 5).toShort()
+                        }
+                        else log(opcode, "INVALID")
                     }
-                    //FX33	BCD
-                    /*set_BCD(Vx)
-                    *(I+0) = BCD(3);
-                    *(I+1) = BCD(2);
-                    *(I+2) = BCD(1);*/
-                    //Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I,
-                    //the tens digit at location I+1, and the ones digit at location I+2.
+
                     0x3 -> {
-
+                        //FX33	BCD
+                        /*set_BCD(Vx)
+                        *(I+0) = BCD(3);
+                        *(I+1) = BCD(2);
+                        *(I+2) = BCD(1);*/
+                        //Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I,
+                        //the tens digit at location I+1, and the ones digit at location I+2.
+                        if (nib3 == 0x3) {
+                            val dig1 = v[nib1] / 100
+                            val dig2 = (v[nib1] % 100) / 10
+                            val dig3 = v[nib1] % 10
+                            cpu.memory[i.toInt()] = dig1.toByte()
+                            cpu.memory[i.toInt() + 1] = dig2.toByte()
+                            cpu.memory[i.toInt() + 2] = dig3.toByte()
+                        }
+                        else log(opcode, "INVALID")
                     }
-                    //FX55	MEM	reg_dump(Vx, &I)	Stores from V0 to VX (including VX) in memory, starting at address I.
-                    //The offset from I is increased by 1 for each value written, but I itself is left unmodified.
+
                     0x5 -> {
-
+                        //FX55	MEM	reg_dump(Vx, &I)	Stores from V0 to VX (including VX) in memory, starting at address I.
+                        //The offset from I is increased by 1 for each value written, but I itself is left unmodified.
+                        if (nib3 == 0x5) {
+                            for (j in 0..nib1) {
+                                memory[i.toInt() + j] = v[j]
+                            }
+                        }
+                        else log(opcode, "INVALID")
                     }
-                    //FX65	MEM	reg_load(Vx, &I)	Fills from V0 to VX (including VX) with values from memory, starting at address I.
-                    //The offset from I is increased by 1 for each value read, but I itself is left unmodified
-                    0x6 -> {
 
+                    0x6 -> {
+                        //FX65	MEM	reg_load(Vx, &I)	Fills from V0 to VX (including VX) with values from memory, starting at address I.
+                        //The offset from I is increased by 1 for each value read, but I itself is left unmodified
+                        if (nib3 == 0x5) {
+                            for (j in 0..nib1) {
+                                v[j] = memory[i.toInt() + j]
+                            }
+                        }
+                        else log(opcode, "INVALID")
                     }
                 }
-
-                log(opcode, "NOT YET IMPLEMENTED")
             }
             else -> {println("INVALID OPCODE GIVEN: " + opcode.toString(16))}
         }

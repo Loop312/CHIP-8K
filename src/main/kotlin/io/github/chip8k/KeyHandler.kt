@@ -14,6 +14,7 @@ class KeyHandler {
         KeyCode.Z to 0xA, KeyCode.X to 0x0, KeyCode.C to 0xB, KeyCode.V to 0xF
     )
 
+    var waiting = false
 
     fun handleInputs() {
         gpu.screen.onKeyPressed = EventHandler { event ->
