@@ -226,7 +226,9 @@ class Cpu {
             0xE -> {
                 //keyhandler stuff
                 when (opcode and 0x00FF) {
-                    0x9E -> {}
+                    0x9E -> {
+
+                    }
                     0xA1 -> {}
                     else -> log(opcode, "INVALID")
                 }
@@ -289,8 +291,6 @@ class Cpu {
         //fetch opcode and decode
         //decode also functions as an execute
         decode(fetch())
-        //handle inputs
-        keyHandler.handleInputs()
     }
 
     //clears the screen
@@ -359,7 +359,7 @@ class Cpu {
     }
 
     fun log(opcode: Int, description: String) {
-        println("opcode: 0x" + opcode.toString(16) + "      description: " + description)
-        log = "opcode: 0x" + opcode.toString(16) + "      description: " + description
+        println("opcode: 0x" + opcode.toString(16).uppercase() + "      description: " + description)
+        log = "opcode: 0x" + opcode.toString(16).uppercase() + "      description: " + description
     }
 }

@@ -40,10 +40,16 @@ class Gpu {
         //buttons (4x4 grid) (need to change the order of the buttons)
         for (y in 0 until 4) {
             for (x in 0 until 4) {
-                val button = Button ((y * 4 + x).toString(16))
+                val button = Button ((y * 4 + x).toString(16).uppercase())
                 buttons += button
-                button.onAction = EventHandler {
-                    cpu.log(0, "pressed button " + (y * 4 + x).toString(16))
+                button.onMousePressed = EventHandler {
+                    keyHandler.keys[y * 4 + x] = true
+                    cpu.log(0, "key " + (y * 4 + x).toString(16).uppercase() + " pressed")
+                }
+                button.onMouseReleased = EventHandler {
+                    keyHandler.keys[y * 4 + x] = false
+                    cpu.log(0, "key " + (y * 4 + x).toString(16).uppercase() + " released")
+                    screen.requestFocus()
                 }
                 keypadScreen.add(button, x, y)
             }
@@ -64,12 +70,14 @@ class Gpu {
                 cpu.loadProgram(loadedRom)
                 running = true
             }
+            screen.requestFocus()
         }
 
         val pauseButton = Button("toggle pause")
         buttons += pauseButton
         pauseButton.onAction = EventHandler {
             togglePause()
+            screen.requestFocus()
         }
         val loadRomButton = Button("load rom")
         buttons += loadRomButton
@@ -88,12 +96,14 @@ class Gpu {
             } else {
                 cpu.log(0, "File selection cancelled")
             }
+            screen.requestFocus()
         }
 
         val settingsButton = Button("settings")
         buttons += settingsButton
         settingsButton.onAction = EventHandler {
             settings.showPopup()
+            screen.requestFocus()
         }
 
         val toggleThemeButton = Button("toggle theme")
@@ -106,6 +116,7 @@ class Gpu {
             }
             settings.flipStops()
             updateAllGraphics()
+            screen.requestFocus()
         }
         menuScreen.children.addAll(powerButton, loadRomButton, pauseButton, settingsButton, toggleThemeButton)
 
@@ -114,6 +125,7 @@ class Gpu {
         mainScreen.add(opcodeTextArea, 0, 1)
         mainScreen.add(keypadScreen, 1, 0)
         mainScreen.add(menuScreen, 1, 1)
+        screen.requestFocus()
     }
     fun draw(x: Int, y: Int, height: Int) {
         cpu.v[0xF] = 0.toByte() //collision register defaults to off

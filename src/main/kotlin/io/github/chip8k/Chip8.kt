@@ -22,6 +22,7 @@ class Chip8 : Application() {
         stage.title = "CHIP-8K"
         stage.scene = gpu.scene
         stage.show()
+        keyHandler.handleInputs()
 
         println("loading roms/ibm.ch8")
         val inputStream: InputStream? = javaClass.classLoader.getResourceAsStream("ibm.ch8")
