@@ -238,7 +238,6 @@ class Cpu {
                     }
                     else -> log(opcode, "INVALID")
                 }
-                log(opcode, "NOT YET IMPLEMENTED")
             }
             //bunch of stuff
             0xF -> {
