@@ -227,9 +227,15 @@ class Cpu {
                 //keyhandler stuff
                 when (opcode and 0x00FF) {
                     0x9E -> {
-
+                        if (keyHandler.keyDown(v[nib1].toInt())) {
+                            skip()
+                        }
                     }
-                    0xA1 -> {}
+                    0xA1 -> {
+                        if (!keyHandler.keyDown(v[nib1].toInt())) {
+                            skip()
+                        }
+                    }
                     else -> log(opcode, "INVALID")
                 }
                 log(opcode, "NOT YET IMPLEMENTED")
@@ -241,7 +247,11 @@ class Cpu {
                     //FX0A	KeyOp	Vx = get_key()	A key press is awaited, and then stored in VX
                     //(blocking operation, all instruction halted until next key event, delay and sound timers should continue processing)
                     0x0 -> {
-
+                        when (nib3) {
+                            0x7 -> {}
+                            0xA -> {}
+                            else -> log(opcode, "INVALID")
+                        }
                     }
                     //FX15	Timer	delay_timer(Vx)	Sets the delay timer to VX.
                     //FX18	Sound	sound_timer(Vx)	Sets the sound timer to VX.
