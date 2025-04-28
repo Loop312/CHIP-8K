@@ -230,11 +230,13 @@ class Cpu {
                         if (keyHandler.keyDown(v[nib1].toInt())) {
                             skip()
                         }
+                        log(opcode, "skip if key v[nib1] down")
                     }
                     0xA1 -> {
                         if (!keyHandler.keyDown(v[nib1].toInt())) {
                             skip()
                         }
+                        log(opcode, "skip if key v[nib1] down")
                     }
                     else -> log(opcode, "INVALID")
                 }
@@ -245,10 +247,13 @@ class Cpu {
                     0x0 -> {
                         when (nib3) {
                             //FX07	Timer	Vx = get_delay()	Sets VX to the value of the delay timer
-                            0x7 -> {}
+                            0x7 -> {
+                                log(opcode, "UNIMPLEMENTED TIMER OPCODE")
+                            }
                             //FX0A	KeyOp	Vx = get_key()	A key press is awaited, and then stored in VX
                             //(blocking operation, all instruction halted until next key event, delay and sound timers should continue processing)
                             0xA -> {
+                                log(opcode, "wait for key press")
                                 keyHandler.waiting = true
                                 while (keyHandler.waiting) {
                                     for (keys in keyHandler.keys.indices) {
@@ -266,9 +271,13 @@ class Cpu {
                     0x1 -> {
                         when (nib3) {
                             //FX15	Timer	delay_timer(Vx)	Sets the delay timer to VX.
-                            0x5-> {}
+                            0x5-> {
+                                log(opcode, "UNIMPLEMENTED TIMER OPCODE")
+                            }
                             //FX18	Sound	sound_timer(Vx)	Sets the sound timer to VX.
-                            0x8-> {}
+                            0x8-> {
+                                log(opcode, "UNIMPLEMENTED SOUND OPCODE")
+                            }
                             //FX1E	MEM	I += Vx	Adds VX to I. VF is not affected.
                             0xE-> {
                                 i = (i.toInt() + v[nib1]).toShort()
@@ -282,6 +291,7 @@ class Cpu {
                         //Characters 0-F (in hexadecimal) are represented by a 4x5 font
                         if (nib3 == 0x9) {
                             i = (v[nib1].toInt() * 5).toShort()
+                            log(opcode, "i = sprite_addr[v[nib1]]")
                         }
                         else log(opcode, "INVALID")
                     }
@@ -301,6 +311,7 @@ class Cpu {
                             cpu.memory[i.toInt()] = dig1.toByte()
                             cpu.memory[i.toInt() + 1] = dig2.toByte()
                             cpu.memory[i.toInt() + 2] = dig3.toByte()
+                            log(opcode, "set Binary Coded Decimal")
                         }
                         else log(opcode, "INVALID")
                     }
@@ -312,6 +323,7 @@ class Cpu {
                             for (j in 0..nib1) {
                                 memory[i.toInt() + j] = v[j]
                             }
+                            log(opcode, "dump v[0..nib1] to memory")
                         }
                         else log(opcode, "INVALID")
                     }
@@ -323,6 +335,7 @@ class Cpu {
                             for (j in 0..nib1) {
                                 v[j] = memory[i.toInt() + j]
                             }
+                            log(opcode, "load v[0..nib1] from memory")
                         }
                         else log(opcode, "INVALID")
                     }
@@ -409,7 +422,7 @@ class Cpu {
     }
 
     fun log(opcode: Int, description: String) {
-        println("opcode: 0x" + opcode.toString(16).uppercase() + "      description: " + description)
         log = "opcode: 0x" + opcode.toString(16).uppercase() + "      description: " + description
+        println(log)
     }
 }
