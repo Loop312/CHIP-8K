@@ -1,16 +1,14 @@
 package io.github.chip8k
 import java.util.ArrayDeque
-import kotlin.experimental.and
-import kotlin.experimental.or
-import kotlin.experimental.xor
 import kotlin.random.Random
 
+@OptIn(ExperimentalUnsignedTypes::class)
 class Cpu {
     //ram
-    var memory = ByteArray(4096)
+    var memory = UByteArray(4096)
 
     //registers
-    var v = ByteArray(16) // 16 general purpose 8-bit registers
+    var v = UByteArray(16) // 16 general purpose 8-bit registers
     var i: Short = 0 // 16-bit register for memory address (the index)
     var pc: Short = 0x200.toShort() // 16-bit program counter (starts at 0x200 or 0000 0010 0000 0000)
 
@@ -18,37 +16,38 @@ class Cpu {
     var stack = ArrayDeque<Short>() // holds 16-bit addresses
 
     //timers
-    var delayTimer: Byte = 0 // 8-bit register (timers are bytes for some reason)
-    var soundTimer: Byte = 0 // 8-bit register
+    var delayTimer = 0.toUByte() // 8-bit register (timers are bytes for some reason)
+    var soundTimer = 0.toUByte() // 8-bit register
 
     //font
-    val font = byteArrayOf(
-        0xF0.toByte(), 0x90.toByte(), 0x90.toByte(), 0x90.toByte(), 0xF0.toByte(), // 0
-        0x20.toByte(), 0x60.toByte(), 0x20.toByte(), 0x20.toByte(), 0x70.toByte(), // 1
-        0xF0.toByte(), 0x10.toByte(), 0xF0.toByte(), 0x80.toByte(), 0xF0.toByte(), // 2
-        0xF0.toByte(), 0x10.toByte(), 0xF0.toByte(), 0x10.toByte(), 0xF0.toByte(), // 3
-        0x90.toByte(), 0x90.toByte(), 0xF0.toByte(), 0x10.toByte(), 0x10.toByte(), // 4
-        0xF0.toByte(), 0x80.toByte(), 0xF0.toByte(), 0x10.toByte(), 0xF0.toByte(), // 5
-        0xF0.toByte(), 0x80.toByte(), 0xF0.toByte(), 0x90.toByte(), 0xF0.toByte(), // 6
-        0xF0.toByte(), 0x10.toByte(), 0x20.toByte(), 0x40.toByte(), 0x40.toByte(), // 7
-        0xF0.toByte(), 0x90.toByte(), 0xF0.toByte(), 0x90.toByte(), 0xF0.toByte(), // 8
-        0xF0.toByte(), 0x90.toByte(), 0xF0.toByte(), 0x10.toByte(), 0xF0.toByte(), // 9
-        0xF0.toByte(), 0x90.toByte(), 0xF0.toByte(), 0x90.toByte(), 0x90.toByte(), // A
-        0xE0.toByte(), 0x90.toByte(), 0xE0.toByte(), 0x90.toByte(), 0xE0.toByte(), // B
-        0xF0.toByte(), 0x80.toByte(), 0xE0.toByte(), 0x80.toByte(), 0xF0.toByte(), // C
-        0xE0.toByte(), 0x90.toByte(), 0x90.toByte(), 0x90.toByte(), 0xE0.toByte(), // D
-        0xF0.toByte(), 0x80.toByte(), 0xF0.toByte(), 0x80.toByte(), 0xF0.toByte(), // E
-        0xF0.toByte(), 0x80.toByte(), 0xF0.toByte(), 0x80.toByte(), 0x80.toByte()  // F
+    val font = ubyteArrayOf(
+        0xF0.toUByte(), 0x90.toUByte(), 0x90.toUByte(), 0x90.toUByte(), 0xF0.toUByte(), // 0
+        0x20.toUByte(), 0x60.toUByte(), 0x20.toUByte(), 0x20.toUByte(), 0x70.toUByte(), // 1
+        0xF0.toUByte(), 0x10.toUByte(), 0xF0.toUByte(), 0x80.toUByte(), 0xF0.toUByte(), // 2
+        0xF0.toUByte(), 0x10.toUByte(), 0xF0.toUByte(), 0x10.toUByte(), 0xF0.toUByte(), // 3
+        0x90.toUByte(), 0x90.toUByte(), 0xF0.toUByte(), 0x10.toUByte(), 0x10.toUByte(), // 4
+        0xF0.toUByte(), 0x80.toUByte(), 0xF0.toUByte(), 0x10.toUByte(), 0xF0.toUByte(), // 5
+        0xF0.toUByte(), 0x80.toUByte(), 0xF0.toUByte(), 0x90.toUByte(), 0xF0.toUByte(), // 6
+        0xF0.toUByte(), 0x10.toUByte(), 0x20.toUByte(), 0x40.toUByte(), 0x40.toUByte(), // 7
+        0xF0.toUByte(), 0x90.toUByte(), 0xF0.toUByte(), 0x90.toUByte(), 0xF0.toUByte(), // 8
+        0xF0.toUByte(), 0x90.toUByte(), 0xF0.toUByte(), 0x10.toUByte(), 0xF0.toUByte(), // 9
+        0xF0.toUByte(), 0x90.toUByte(), 0xF0.toUByte(), 0x90.toUByte(), 0x90.toUByte(), // A
+        0xE0.toUByte(), 0x90.toUByte(), 0xE0.toUByte(), 0x90.toUByte(), 0xE0.toUByte(), // B
+        0xF0.toUByte(), 0x80.toUByte(), 0xE0.toUByte(), 0x80.toUByte(), 0xF0.toUByte(), // C
+        0xE0.toUByte(), 0x90.toUByte(), 0x90.toUByte(), 0x90.toUByte(), 0xE0.toUByte(), // D
+        0xF0.toUByte(), 0x80.toUByte(), 0xF0.toUByte(), 0x80.toUByte(), 0xF0.toUByte(), // E
+        0xF0.toUByte(), 0x80.toUByte(), 0xF0.toUByte(), 0x80.toUByte(), 0x80.toUByte()  // F
     )
     var log = ""
 
     //loads font into memory
     init {
+        font.toUByteArray()
         font.copyInto(memory, 0x50)
     }
 
     //loads a program/rom into memory
-    fun loadProgram(program: ByteArray) {
+    fun loadProgram(program: UByteArray) {
         //load program into memory
         program.copyInto(memory, 0x200)
     }
@@ -87,25 +86,25 @@ class Cpu {
             //1NNN	Flow	goto NNN;	Jumps to address NNN
             0x1 -> {
                 //jump to address corresponding to last 3 nibbles
-                jumpTo(opcode and 0x0FFF)
+                jumpTo((opcode and 0x0FFF).toUInt())
                 log(opcode,"jump to address")
             }
             //2NNN	Flow	*(0xNNN)()	Calls subroutine at NNN
             0x2 -> {
                 //call subroutine at last 3 nibbles
-                call(opcode and 0x0FFF)
+                call((opcode and 0x0FFF).toUInt())
                 log(opcode,"call subroutine at address")
             }
             //3XNN	Cond	if (Vx == NN)	Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block)
             0x3 -> {
-                if (v[nib1] == (opcode and 0x00FF).toByte()) {
+                if (v[nib1] == (opcode and 0x00FF).toUByte()) {
                     skip()
                 }
                 log(opcode, "skip if v[nib1] = last 2 nibbles")
             }
             //4XNN	Cond	if (Vx != NN)	Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
             0x4 -> {
-                if (v[nib1] != (opcode and 0x00FF).toByte()) {
+                if (v[nib1] != (opcode and 0x00FF).toUByte()) {
                     skip()
                 }
                 log(opcode, "skip if v[nib1] != last 2 nibbles")
@@ -139,50 +138,50 @@ class Cpu {
                     }
                     //8XY1	BitOp	Vx |= Vy	Sets VX to VX or VY. (bitwise OR operation).
                     0x1 -> {
-                        v[nib1] = (v[nib1] or v[nib2]).toByte()
+                        v[nib1] = (v[nib1] or v[nib2]).toUByte()
                         log(opcode, "v[nib1] |= v[nib2]")
                     }
                     //8XY2	BitOp	Vx &= Vy	Sets VX to VX and VY. (bitwise AND operation).
                     0x2 -> {
-                        v[nib1] = (v[nib1] and v[nib2]).toByte()
+                        v[nib1] = (v[nib1] and v[nib2]).toUByte()
                         log(opcode, "v[nib1] &= v[nib2]")
                     }
                     //8XY3	BitOp	Vx ^= Vy	Sets VX to VX xor VY.
                     0x3 -> {
-                        v[nib1] = (v[nib1] xor v[nib2]).toByte()
+                        v[nib1] = (v[nib1] xor v[nib2]).toUByte()
                         log(opcode, "v[nib1] ^= v[nib2]")
                     }
                     //8XY4	Math	Vx += Vy	Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
                     0x4 -> {
                         val temp = v[nib1].toInt() + v[nib2].toInt()
-                        v[nib1] = (temp and 0xFF).toByte()
-                        v[0xF] = if (temp > 0xFF) 1.toByte() else 0.toByte()
+                        v[nib1] = (temp and 0xFF).toUByte()
+                        v[0xF] = if (temp > 0xFF) 1.toUByte() else 0.toUByte()
                         log(opcode, "v[nib1] += v[nib2]")
                     }
                     //8XY5	Math	Vx -= Vy	VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not)
                     0x5 -> {
                         val temp = v[nib1].toInt() - v[nib2].toInt()
-                        v[nib1] = (temp and 0xFF).toByte()
-                        v[0xF] = if (temp < 0) 0 else 1
+                        v[nib1] = (temp and 0xFF).toUByte()
+                        v[0xF] = if (temp < 0) 0.toUByte() else 1.toUByte()
                         log(opcode, "v[nib1] -= v[nib2]")
                     }
                     //8XY6	BitOp	Vx >>= 1	Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF.
                     0x6 -> {
-                        v[0xF] = v[nib1] and 1
-                        v[nib1] = (v[nib1].toInt() shr 1).toByte()
+                        v[0xF] = v[nib1] and 1.toUByte()
+                        v[nib1] = (v[nib1].toInt() shr 1).toUByte()
                         log(opcode, "v[nib1] >>= 1")
                     }
                     //8XY7	Math	Vx = Vy - Vx	Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
                     0x7 -> {
                         val temp = v[nib2].toInt() - v[nib1].toInt()
-                        v[nib1] = (temp and 0xFF).toByte()
-                        v[0xF] = if (temp < 0) 0 else 1
+                        v[nib1] = (temp and 0xFF).toUByte()
+                        v[0xF] = if (temp < 0) 0.toUByte() else 1.toUByte()
                         log(opcode, "v[nib1] = v[nib2] - v[nib1]")
                     }
                     //8XYE	BitOp	Vx <<= 1	Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset.
                     0xE -> {
-                        v[0xF] = (v[nib1].toInt() shr 7).toByte()
-                        v[nib1] = (v[nib1].toInt() shl 1).toByte()
+                        v[0xF] = (v[nib1].toInt() shr 7).toUByte()
+                        v[nib1] = (v[nib1].toInt() shl 1).toUByte()
                         log(opcode, "v[nib1] <<= 1")
                     }
                     else -> log(opcode, "INVALID")
@@ -203,7 +202,7 @@ class Cpu {
             }
             //BNNN	Flow	PC = V0 + NNN	Jumps to the address NNN plus V0.
             0xB -> {
-                jumpTo(v[0] + (opcode and 0x0FFF))
+                jumpTo(v[0] + (opcode and 0x0FFF).toUInt())
                 log(opcode, "jump to v[0] + last 3 nibbles")
             }
             //CXNN	Rand	Vx = rand() & NN	Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
@@ -258,7 +257,7 @@ class Cpu {
                                 while (keyHandler.waiting) {
                                     for (keys in keyHandler.keys.indices) {
                                         if (keyHandler.keyDown(keys)) {
-                                            v[nib1] = keys.toByte()
+                                            v[nib1] = keys.toUByte()
                                             keyHandler.waiting = false
                                             break
                                         }
@@ -280,7 +279,7 @@ class Cpu {
                             }
                             //FX1E	MEM	I += Vx	Adds VX to I. VF is not affected.
                             0xE-> {
-                                i = (i.toInt() + v[nib1]).toShort()
+                                i = (i.toUInt() + v[nib1]).toShort()
                                 log(opcode, "i += v[nib1]")
                             }
                             else -> log(opcode, "INVALID")
@@ -305,13 +304,20 @@ class Cpu {
                         //Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I,
                         //the tens digit at location I+1, and the ones digit at location I+2.
                         if (nib3 == 0x3) {
-                            val dig1 = v[nib1] / 100
-                            val dig2 = (v[nib1] % 100) / 10
-                            val dig3 = v[nib1] % 10
-                            cpu.memory[i.toInt()] = dig1.toByte()
-                            cpu.memory[i.toInt() + 1] = dig2.toByte()
-                            cpu.memory[i.toInt() + 2] = dig3.toByte()
-                            log(opcode, "set Binary Coded Decimal")
+                            log(opcode, "------------- FX33 START -------- ")
+                            log(opcode, "I = $i, V[${nib1.toString(16)}] = ${v[nib1]}") // Log I and VX
+                            val dig1 = v[nib1] / 100.toUInt()
+                            val dig2 = (v[nib1] % 100.toUInt()) / 10.toUInt()
+                            val dig3 = v[nib1] % 10.toUInt()
+                            memory[i.toInt()] = dig1.toUByte()
+                            memory[i.toInt() + 1] = dig2.toUByte()
+                            memory[i.toInt() + 2] = dig3.toUByte()
+                            //log(opcode, "set Binary Coded Decimal, doesn't work properly yet")
+                            log(opcode, "set BCD: " + memory[i.toInt()] + " " + memory[i.toInt() + 1] + " " + memory[i.toInt() + 2])
+                            log(opcode, "memory[$i] = " + memory[i.toInt()])
+                            log(opcode, "memory[$i+1] = " + memory[i.toInt() + 1])
+                            log(opcode, "memory[$i+2] = " + memory[i.toInt() + 2])
+                            log(opcode, "---------------- FX33 END ---------------")
                         }
                         else log(opcode, "INVALID")
                     }
@@ -367,12 +373,12 @@ class Cpu {
     }
 
     //jumps to addr
-    fun jumpTo(addr: Int) {
+    fun jumpTo(addr: UInt) {
         pc = addr.toShort()
     }
 
     //calls addr/subroutine
-    fun call(addr: Int) {
+    fun call(addr: UInt) {
         stack.push(pc)
         pc = addr.toShort()
     }
@@ -384,16 +390,16 @@ class Cpu {
 
     //sets v[nib1] to last byte of opcode
     fun set(register: Int, opcode: Int) {
-        v[register] = (opcode and 0x00FF).toByte()
+        v[register] = (opcode and 0x00FF).toUByte()
     }
 
     //
     fun add(register: Int, opcode: Int) {
-        v[register] = (v[register] + (opcode and 0x00FF)).toByte()
+        v[register] = (v[register] + (opcode and 0x00FF).toUInt()).toUByte()
     }
 
     //draws a sprite
-    fun draw(registerX: Byte, registerY: Byte, height: Int) {
+    fun draw(registerX: UByte, registerY: UByte, height: Int) {
 
         val x = registerX.toInt() % 64
         val y = registerY.toInt() % 32
@@ -403,10 +409,10 @@ class Cpu {
 
     fun reset() {
         //ram
-        memory = ByteArray(4096)
+        memory = UByteArray(4096)
 
         //registers
-        v = ByteArray(16) // 16 general purpose 8-bit registers
+        v = UByteArray(16) // 16 general purpose 8-bit registers
         i = 0 // 16-bit register for memory address (the index)
         pc = 0x200.toShort() // 16-bit program counter (starts at 0x200 or 0000 0010 0000 0000)
 
@@ -414,8 +420,8 @@ class Cpu {
         stack = ArrayDeque<Short>() // holds 16-bit addresses
 
         //timers
-        delayTimer = 0 // 8-bit register (timers are bytes for some reason)
-        soundTimer = 0 // 8-bit register
+        delayTimer = 0.toUByte() // 8-bit register (timers are bytes for some reason)
+        soundTimer = 0.toUByte() // 8-bit register
 
         cls()
         gpu.updateDisplay()

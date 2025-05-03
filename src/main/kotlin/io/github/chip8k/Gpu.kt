@@ -15,6 +15,7 @@ import javafx.scene.paint.Color
 import javafx.stage.FileChooser
 import java.io.File
 
+@OptIn(ExperimentalUnsignedTypes::class)
 class Gpu {
     //display
     //64x32 pixels (uses an on off system for the pixels)
@@ -67,7 +68,7 @@ class Gpu {
             }
             else {
                 cpu.log(0, "powering on")
-                cpu.loadProgram(loadedRom)
+                cpu.loadProgram(loadedRom.toUByteArray())
                 running = true
             }
             screen.requestFocus()
@@ -92,7 +93,7 @@ class Gpu {
                 cpu.log(0, "Selected file: ${selectedFile.absolutePath}")
                 loadedRom = selectedFile.readBytes()
                 cpu.reset()
-                cpu.loadProgram(loadedRom)
+                cpu.loadProgram(loadedRom.toUByteArray())
             } else {
                 cpu.log(0, "File selection cancelled")
             }
@@ -128,7 +129,7 @@ class Gpu {
         screen.requestFocus()
     }
     fun draw(x: Int, y: Int, height: Int) {
-        cpu.v[0xF] = 0.toByte() //collision register defaults to off
+        cpu.v[0xF] = 0.toUByte() //collision register defaults to off
 
         for (row in 0 until height){
             //get sprite data from memory
@@ -139,7 +140,7 @@ class Gpu {
                     val pixelX = (x + bit) % 64
                     val pixelY = (y + row) % 32
                     if (display[pixelX][pixelY]) {
-                        cpu.v[0xF] = 1.toByte() // Collision
+                        cpu.v[0xF] = 1.toUByte() // Collision
                     }
                     display[pixelX][pixelY] = display[pixelX][pixelY] xor true
                 }

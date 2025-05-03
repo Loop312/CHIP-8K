@@ -18,19 +18,20 @@ val keyHandler = KeyHandler()
 class Chip8 : Application() {
 
 
+    @OptIn(ExperimentalUnsignedTypes::class)
     override fun start(stage: Stage) {
         stage.title = "CHIP-8K"
         stage.scene = gpu.scene
         stage.show()
         keyHandler.handleInputs()
 
-        println("loading roms/ibm.ch8")
-        val inputStream: InputStream? = javaClass.classLoader.getResourceAsStream("ibm.ch8")
+        println("loading roms/3-corax+.ch8")
+        val inputStream: InputStream? = javaClass.classLoader.getResourceAsStream("3-corax+.ch8")
         if (inputStream == null) { println("rom not found") }
 
         if (inputStream != null) {
             loadedRom = inputStream.readBytes()
-            cpu.loadProgram(loadedRom)
+            cpu.loadProgram(loadedRom.toUByteArray())
             running = true
             val timer = object : AnimationTimer() {
                 private var lastUpdateTime: Long = 0
