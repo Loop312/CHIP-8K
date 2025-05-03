@@ -304,20 +304,13 @@ class Cpu {
                         //Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I,
                         //the tens digit at location I+1, and the ones digit at location I+2.
                         if (nib3 == 0x3) {
-                            log(opcode, "------------- FX33 START -------- ")
-                            log(opcode, "I = $i, V[${nib1.toString(16)}] = ${v[nib1]}") // Log I and VX
                             val dig1 = v[nib1] / 100.toUInt()
                             val dig2 = (v[nib1] % 100.toUInt()) / 10.toUInt()
                             val dig3 = v[nib1] % 10.toUInt()
                             memory[i.toInt()] = dig1.toUByte()
                             memory[i.toInt() + 1] = dig2.toUByte()
                             memory[i.toInt() + 2] = dig3.toUByte()
-                            //log(opcode, "set Binary Coded Decimal, doesn't work properly yet")
-                            log(opcode, "set BCD: " + memory[i.toInt()] + " " + memory[i.toInt() + 1] + " " + memory[i.toInt() + 2])
-                            log(opcode, "memory[$i] = " + memory[i.toInt()])
-                            log(opcode, "memory[$i+1] = " + memory[i.toInt() + 1])
-                            log(opcode, "memory[$i+2] = " + memory[i.toInt() + 2])
-                            log(opcode, "---------------- FX33 END ---------------")
+                            log(opcode, "set Binary Coded Decimal by splitting v[nib1] into 3 digits")
                         }
                         else log(opcode, "INVALID")
                     }
