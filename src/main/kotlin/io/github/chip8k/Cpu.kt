@@ -167,8 +167,9 @@ class Cpu {
                     }
                     //8XY6	BitOp	Vx >>= 1	Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF.
                     0x6 -> {
-                        v[0xF] = v[nib1] and 1.toUByte()
-                        v[nib1] = (v[nib1].toInt() shr 1).toUByte()
+                        val temp = v[nib1] and 1.toUByte()
+                        v[nib1] = (v[nib1].toUInt() shr 1).toUByte()
+                        v[0xF] = temp
                         log(opcode, "v[nib1] >>= 1")
                     }
                     //8XY7	Math	Vx = Vy - Vx	Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
@@ -180,8 +181,9 @@ class Cpu {
                     }
                     //8XYE	BitOp	Vx <<= 1	Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset.
                     0xE -> {
-                        v[0xF] = (v[nib1].toInt() shr 7).toUByte()
+                        val temp = (v[nib1].toInt() shr 7).toUByte()
                         v[nib1] = (v[nib1].toInt() shl 1).toUByte()
+                        v[0xF] = temp
                         log(opcode, "v[nib1] <<= 1")
                     }
                     else -> log(opcode, "INVALID")

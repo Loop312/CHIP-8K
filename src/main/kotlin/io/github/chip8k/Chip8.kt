@@ -25,8 +25,8 @@ class Chip8 : Application() {
         stage.show()
         keyHandler.handleInputs()
 
-        println("loading roms/3-corax+.ch8")
-        val inputStream: InputStream? = javaClass.classLoader.getResourceAsStream("3-corax+.ch8")
+        println("loading roms/4-flags.ch8")
+        val inputStream: InputStream? = javaClass.classLoader.getResourceAsStream("4-flags.ch8")
         if (inputStream == null) { println("rom not found") }
 
         if (inputStream != null) {
