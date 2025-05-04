@@ -15,10 +15,11 @@ class Cpu {
     //stack
     var stack = ArrayDeque<Short>() // holds 16-bit addresses
 
-    //timers
-    var delayTimer = 0.toUByte() // 8-bit register (timers are bytes for some reason)
-    var soundTimer = 0.toUByte() // 8-bit register
+    //timers (switched to ints to make operations easier
+    var delayTimer = 0 // 8-bit register (timers are bytes for some reason)
+    var soundTimer = 0 // 8-bit register
 
+    var ipf = 11 //instructions per frame
     //font
     val font = ubyteArrayOf(
         0xF0.toUByte(), 0x90.toUByte(), 0x90.toUByte(), 0x90.toUByte(), 0xF0.toUByte(), // 0
@@ -138,17 +139,17 @@ class Cpu {
                     }
                     //8XY1	BitOp	Vx |= Vy	Sets VX to VX or VY. (bitwise OR operation).
                     0x1 -> {
-                        v[nib1] = (v[nib1] or v[nib2]).toUByte()
+                        v[nib1] = (v[nib1] or v[nib2])
                         log(opcode, "v[nib1] |= v[nib2]")
                     }
                     //8XY2	BitOp	Vx &= Vy	Sets VX to VX and VY. (bitwise AND operation).
                     0x2 -> {
-                        v[nib1] = (v[nib1] and v[nib2]).toUByte()
+                        v[nib1] = (v[nib1] and v[nib2])
                         log(opcode, "v[nib1] &= v[nib2]")
                     }
                     //8XY3	BitOp	Vx ^= Vy	Sets VX to VX xor VY.
                     0x3 -> {
-                        v[nib1] = (v[nib1] xor v[nib2]).toUByte()
+                        v[nib1] = (v[nib1] xor v[nib2])
                         log(opcode, "v[nib1] ^= v[nib2]")
                     }
                     //8XY4	Math	Vx += Vy	Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
@@ -218,12 +219,14 @@ class Cpu {
             Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change
             after the execution of this instruction. As described above, VF is set to 1 if any screen pixels
             are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen*/
+            //PREVENT WRAPPING BEHAVIOR
             0xD -> {
                 draw(v[nib1], v[nib2], nib3)
                 log(opcode, "draw sprite")
             }
             //EX9E	KeyOp	if (key() == Vx)	Skips the next instruction if the key stored in VX(only consider the lowest nibble) is pressed (usually the next instruction is a jump to skip a code block)
             //EXA1	KeyOp	if (key() != Vx)	Skips the next instruction if the key stored in VX(only consider the lowest nibble) is not pressed (usually the next instruction is a jump to skip a code block)
+            //UNTESTED
             0xE -> {
                 //keyhandler stuff
                 when (opcode and 0x00FF) {
@@ -231,13 +234,13 @@ class Cpu {
                         if (keyHandler.keyDown(v[nib1].toInt())) {
                             skip()
                         }
-                        log(opcode, "skip if key v[nib1] down")
+                        log(opcode, "skip if key v[nib1] down, UNTESTED")
                     }
                     0xA1 -> {
                         if (!keyHandler.keyDown(v[nib1].toInt())) {
                             skip()
                         }
-                        log(opcode, "skip if key v[nib1] down")
+                        log(opcode, "skip if key v[nib1] down, UNTESTED")
                     }
                     else -> log(opcode, "INVALID")
                 }
@@ -245,16 +248,19 @@ class Cpu {
             //bunch of stuff
             0xF -> {
                 when (nib2) {
+                    //FX07 UNTESTED
+                    //FX0A
                     0x0 -> {
                         when (nib3) {
                             //FX07	Timer	Vx = get_delay()	Sets VX to the value of the delay timer
                             0x7 -> {
-                                log(opcode, "UNIMPLEMENTED TIMER OPCODE")
+                                v[nib1] = delayTimer.toUByte()
+                                log(opcode, "v[nib1] = delayTimer, UNTESTED")
                             }
                             //FX0A	KeyOp	Vx = get_key()	A key press is awaited, and then stored in VX
                             //(blocking operation, all instruction halted until next key event, delay and sound timers should continue processing)
                             0xA -> {
-                                log(opcode, "wait for key press")
+                                log(opcode, "wait for key press, UNTESTED")
                                 keyHandler.waiting = true
                                 while (keyHandler.waiting) {
                                     for (keys in keyHandler.keys.indices) {
@@ -269,15 +275,20 @@ class Cpu {
                             else -> log(opcode, "INVALID")
                         }
                     }
+                    //FX15 UNTESTED
+                    //FX18 UNTESTED
+                    //FX1E
                     0x1 -> {
                         when (nib3) {
                             //FX15	Timer	delay_timer(Vx)	Sets the delay timer to VX.
                             0x5-> {
-                                log(opcode, "UNIMPLEMENTED TIMER OPCODE")
+                                delayTimer = v[nib1].toInt()
+                                log(opcode, "delayTimer = v[nib1], UNTESTED")
                             }
                             //FX18	Sound	sound_timer(Vx)	Sets the sound timer to VX.
                             0x8-> {
-                                log(opcode, "UNIMPLEMENTED SOUND OPCODE")
+                                soundTimer = v[nib1].toInt()
+                                log(opcode, "soundTimer = v[nib1], UNTESTED")
                             }
                             //FX1E	MEM	I += Vx	Adds VX to I. VF is not affected.
                             0xE-> {
@@ -287,6 +298,7 @@ class Cpu {
                             else -> log(opcode, "INVALID")
                         }
                     }
+                    //FX29
                     0x2 -> {
                         //FX29	MEM	I = sprite_addr[Vx]	Sets I to the location of the sprite for the character in VX(only consider the lowest nibble).
                         //Characters 0-F (in hexadecimal) are represented by a 4x5 font
@@ -296,7 +308,7 @@ class Cpu {
                         }
                         else log(opcode, "INVALID")
                     }
-
+                    //FX33
                     0x3 -> {
                         //FX33	BCD
                         /*set_BCD(Vx)
@@ -316,7 +328,7 @@ class Cpu {
                         }
                         else log(opcode, "INVALID")
                     }
-
+                    //FX55
                     0x5 -> {
                         //FX55	MEM	reg_dump(Vx, &I)	Stores from V0 to VX (including VX) in memory, starting at address I.
                         //The offset from I is increased by 1 for each value written, but I itself is left unmodified.
@@ -328,7 +340,7 @@ class Cpu {
                         }
                         else log(opcode, "INVALID")
                     }
-
+                    //FX65
                     0x6 -> {
                         //FX65	MEM	reg_load(Vx, &I)	Fills from V0 to VX (including VX) with values from memory, starting at address I.
                         //The offset from I is increased by 1 for each value read, but I itself is left unmodified
@@ -347,14 +359,25 @@ class Cpu {
     }
 
     fun updateTimers() {
-
+        if (delayTimer > 0){
+            delayTimer -= 1
+        }
+        if (soundTimer > 0){
+            soundTimer -= 1
+        }
     }
 
     //runs a single cycle of the cpu
     fun runCycle() {
+        //update timers
+        updateTimers()
         //fetch opcode and decode
         //decode also functions as an execute
-        decode(fetch())
+        if (!keyHandler.waiting){
+            repeat(ipf) {
+                decode(fetch())
+            }
+        }
     }
 
     //clears the screen
@@ -415,8 +438,8 @@ class Cpu {
         stack = ArrayDeque<Short>() // holds 16-bit addresses
 
         //timers
-        delayTimer = 0.toUByte() // 8-bit register (timers are bytes for some reason)
-        soundTimer = 0.toUByte() // 8-bit register
+        delayTimer = 0 // 8-bit register (timers are bytes for some reason)
+        soundTimer = 0 // 8-bit register
 
         cls()
         gpu.updateDisplay()

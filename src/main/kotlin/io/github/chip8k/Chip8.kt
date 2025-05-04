@@ -38,11 +38,10 @@ class Chip8 : Application() {
 
                 override fun handle(now: Long) {
                     if (now - lastUpdateTime >= settings.delayInNs) {
-                        if (running && !paused && !keyHandler.waiting) {
+                        if (running && !paused) {
                             gpu.handleLogs()
-                            gpu.updateDisplay()
                             cpu.runCycle()
-                            cpu.updateTimers()
+                            gpu.updateDisplay()
                             lastUpdateTime = now
                         }
                     }
