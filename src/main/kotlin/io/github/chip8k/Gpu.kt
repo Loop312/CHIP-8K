@@ -74,6 +74,18 @@ class Gpu {
             screen.requestFocus()
         }
 
+        val restartButton = Button("restart")
+        buttons += restartButton
+        restartButton.onAction = EventHandler {
+            cpu.log(0, "restarting")
+            handleLogs()
+            running = false
+            cpu.reset()
+            cpu.loadProgram(loadedRom.toUByteArray())
+            running = true
+            screen.requestFocus()
+        }
+
         val pauseButton = Button("toggle pause")
         buttons += pauseButton
         pauseButton.onAction = EventHandler {
@@ -119,7 +131,14 @@ class Gpu {
             updateAllGraphics()
             screen.requestFocus()
         }
-        menuScreen.children.addAll(powerButton, loadRomButton, pauseButton, settingsButton, toggleThemeButton)
+        menuScreen.children.addAll(
+            powerButton,
+            restartButton,
+            loadRomButton,
+            pauseButton,
+            settingsButton,
+            toggleThemeButton
+        )
 
         updateAllGraphics()
         mainScreen.add(screen, 0, 0)
