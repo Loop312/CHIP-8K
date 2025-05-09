@@ -39,6 +39,7 @@ class Gpu {
 
     init {
         //buttons (4x4 grid) (need to change the order of the buttons)
+        keypadScreen.alignment = Pos.BOTTOM_CENTER
         for (y in 0 until 4) {
             for (x in 0 until 4) {
                 val button = Button ((y * 4 + x).toString(16).uppercase())
@@ -56,8 +57,23 @@ class Gpu {
             }
         }
         //buttons
-        menuScreen.alignment = Pos.CENTER
+        menuScreen.alignment = Pos.BOTTOM_CENTER
+        val saveButton = Button("save state")
+        saveButton.minWidth = 100.0
+        buttons += saveButton
+        saveButton.onAction = EventHandler {
+            cpu.saveState()
+        }
+
+        val loadButton = Button("load state")
+        buttons += loadButton
+        loadButton.minWidth = 100.0
+        loadButton.onAction = EventHandler {
+            cpu.loadState()
+        }
+
         val powerButton = Button("power")
+        powerButton.minWidth = 100.0
         buttons += powerButton
         powerButton.onAction = EventHandler {
             if (running) {
@@ -75,6 +91,7 @@ class Gpu {
         }
 
         val restartButton = Button("restart")
+        restartButton.minWidth = 100.0
         buttons += restartButton
         restartButton.onAction = EventHandler {
             cpu.log(0, "restarting")
@@ -87,12 +104,14 @@ class Gpu {
         }
 
         val pauseButton = Button("toggle pause")
+        pauseButton.minWidth = 100.0
         buttons += pauseButton
         pauseButton.onAction = EventHandler {
             togglePause()
             screen.requestFocus()
         }
         val loadRomButton = Button("load rom")
+        loadRomButton.minWidth = 100.0
         buttons += loadRomButton
         loadRomButton.onAction = EventHandler {
             cpu.log(0, "loading another rom")
@@ -113,6 +132,7 @@ class Gpu {
         }
 
         val settingsButton = Button("settings")
+        settingsButton.minWidth = 100.0
         buttons += settingsButton
         settingsButton.onAction = EventHandler {
             settings.showPopup()
@@ -120,6 +140,7 @@ class Gpu {
         }
 
         val toggleThemeButton = Button("toggle theme")
+        toggleThemeButton.minWidth = 100.0
         buttons += toggleThemeButton
         toggleThemeButton.onAction = EventHandler {
             if (settings.colours.first == Color.WHITE) {
@@ -132,6 +153,8 @@ class Gpu {
             screen.requestFocus()
         }
         menuScreen.children.addAll(
+            saveButton,
+            loadButton,
             powerButton,
             restartButton,
             loadRomButton,
@@ -143,8 +166,8 @@ class Gpu {
         updateAllGraphics()
         mainScreen.add(screen, 0, 0)
         mainScreen.add(opcodeTextArea, 0, 1)
-        mainScreen.add(keypadScreen, 1, 0)
-        mainScreen.add(menuScreen, 1, 1)
+        mainScreen.add(keypadScreen, 1, 1)
+        mainScreen.add(menuScreen, 1, 0)
         screen.requestFocus()
     }
     fun draw(x: Int, y: Int, height: Int) {

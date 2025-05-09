@@ -19,16 +19,17 @@ class Settings {
     var scale = 10.0
     var colours = Pair(Color.WHITE, Color.BLACK)
     var fps = 60
-    var delayInNs = (1_000_000_000 / fps).toInt()
+    var delayInNs = (1_000_000_000 / fps)
+    var ipf = 11
 
     // Create a list of Stop objects for the gradient
-    var stops = mutableListOf<Stop>(
+    var stops = mutableListOf(
         Stop(0.0, colours.first),
         Stop(0.5, colours.second)
     )
 
     fun flipStops() {
-        stops = mutableListOf<Stop>(
+        stops = mutableListOf(
             Stop(0.0, colours.first),
             Stop(0.5, colours.second)
         )
@@ -59,7 +60,7 @@ class Settings {
         scale = 10.0
         colours = Pair(Color.WHITE, Color.BLACK)
         fps = 60
-        delayInNs = (1_000_000_000 / fps).toInt()
+        delayInNs = (1_000_000_000 / fps)
     }
 
     private fun createPopupPane(): GridPane {

@@ -6,20 +6,30 @@ import kotlin.random.Random
 class Cpu {
     //ram
     var memory = UByteArray(4096)
+    var memory2 = UByteArray(4096)
 
     //registers
     var v = UByteArray(16) // 16 general purpose 8-bit registers
     var i: Short = 0 // 16-bit register for memory address (the index)
-    var pc: Short = 0x200.toShort() // 16-bit program counter (starts at 0x200 or 0000 0010 0000 0000)
+    var pc = 0x200.toShort() // 16-bit program counter (starts at 0x200 or 0000 0010 0000 0000)
+
+    var v2 = UByteArray(16)
+    var i2: Short = 0
+    var pc2 = 0x200.toShort()
 
     //stack
     var stack = ArrayDeque<Short>() // holds 16-bit addresses
+    var stack2 = ArrayDeque<Short>()
 
     //timers (switched to ints to make operations easier
     var delayTimer = 0 // 8-bit register (timers are bytes for some reason)
     var soundTimer = 0 // 8-bit register
 
-    var ipf = 11 //instructions per frame
+    var delayTimer2 = 0
+    var soundTimer2 = 0
+
+    var display2 = Array(64) { BooleanArray(32) }
+
     //font
     val font = ubyteArrayOf(
         0xF0.toUByte(), 0x90.toUByte(), 0x90.toUByte(), 0x90.toUByte(), 0xF0.toUByte(), // 0
@@ -374,7 +384,7 @@ class Cpu {
         //fetch opcode and decode
         //decode also functions as an execute
         if (!keyHandler.waiting){
-            repeat(ipf) {
+            repeat(settings.ipf) {
                 decode(fetch())
             }
         }
@@ -443,6 +453,51 @@ class Cpu {
 
         cls()
         gpu.updateDisplay()
+    }
+
+    fun saveState() {
+        log(0, "SAVING STATE")
+        paused = true
+        //ram
+        memory2 = memory.copyOf()
+
+        //registers
+        v2 = v.copyOf() // 16 general purpose 8-bit registers
+        i2 = i // 16-bit register for memory address (the index)
+        pc2 = pc // 16-bit program counter (starts at 0x200 or 0000 0010 0000 0000)
+
+        //stack
+        stack2 = ArrayDeque(stack) // holds 16-bit addresses
+
+        //timers
+        delayTimer2 = delayTimer // 8-bit register (timers are bytes for some reason)
+        soundTimer2 = soundTimer // 8-bit register
+
+        display2 = gpu.display.map { it.copyOf() }.toTypedArray()
+        paused = false
+        log(0, "STATE SAVED")
+    }
+
+    fun loadState(){
+        paused = true
+        //ram
+        memory = memory2.copyOf()
+
+        //registers
+        v = v2.copyOf() // 16 general purpose 8-bit registers
+        i = i2 // 16-bit register for memory address (the index)
+        pc = pc2 // 16-bit program counter (starts at 0x200 or 0000 0010 0000 0000)
+
+        //stack
+        stack = ArrayDeque(stack2) // holds 16-bit addresses
+
+        //timers
+        delayTimer = delayTimer2 // 8-bit register (timers are bytes for some reason)
+        soundTimer = soundTimer2 // 8-bit register
+
+        gpu.display = display2.map { it.copyOf() }.toTypedArray()
+        gpu.updateDisplay()
+        paused = false
     }
 
     fun log(opcode: Int, description: String) {
