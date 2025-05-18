@@ -6,6 +6,8 @@ import javafx.scene.input.KeyCode
 class KeyHandler {
     //keyboard
     var keys = BooleanArray(16) // 16 keys on the keyboard, seems to follow hexadecimal system (0-9, A-F)
+    var lastKeyPressRecorder = false
+    var lastKeyPress = -1
 
     var keyMap = mapOf<KeyCode, Int>(
         KeyCode.DIGIT1 to 0x1, KeyCode.DIGIT2 to 0x2, KeyCode.DIGIT3 to 0x3, KeyCode.DIGIT4 to 0xC,
@@ -13,8 +15,6 @@ class KeyHandler {
         KeyCode.A to 0x7, KeyCode.S to 0x8, KeyCode.D to 0x9, KeyCode.F to 0xE,
         KeyCode.Z to 0xA, KeyCode.X to 0x0, KeyCode.C to 0xB, KeyCode.V to 0xF
     )
-
-    var waiting = false
 
     fun handleInputs() {
         gpu.screen.onKeyPressed = EventHandler { event ->
@@ -29,6 +29,7 @@ class KeyHandler {
             keyMap[event.code]?.let { index ->
                 if (index in keys.indices) {
                     keys[index] = false
+                    lastKeyPress = if (lastKeyPressRecorder) index else -1
                     cpu.log(0, "key " + index.toString(16).uppercase() + " released")
                 }
             }

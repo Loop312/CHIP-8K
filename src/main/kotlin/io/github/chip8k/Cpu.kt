@@ -265,22 +265,21 @@ class Cpu {
                             //FX07	Timer	Vx = get_delay()	Sets VX to the value of the delay timer
                             0x7 -> {
                                 v[nib1] = delayTimer.toUByte()
-                                log(opcode, "v[nib1] = delayTimer, UNTESTED")
+                                log(opcode, "v[nib1] = delayTimer")
                             }
                             //FX0A	KeyOp	Vx = get_key()	A key press is awaited, and then stored in VX
                             //(blocking operation, all instruction halted until next key event, delay and sound timers should continue processing)
                             0xA -> {
-                                log(opcode, "wait for key press, UNTESTED")
-                                keyHandler.waiting = true
-                                while (keyHandler.waiting) {
-                                    for (keys in keyHandler.keys.indices) {
-                                        if (keyHandler.keyDown(keys)) {
-                                            v[nib1] = keys.toUByte()
-                                            keyHandler.waiting = false
-                                            break
-                                        }
-                                    }
+                                if (keyHandler.lastKeyPress == -1){
+                                    keyHandler.lastKeyPressRecorder = true
+                                    pc = (pc - 2).toShort()
                                 }
+                                else {
+                                    v[nib1] = keyHandler.lastKeyPress.toUByte()
+                                    keyHandler.lastKeyPressRecorder = false
+                                    keyHandler.lastKeyPress = -1
+                                }
+                                log(opcode, "wait for key press")
                             }
                             else -> log(opcode, "INVALID")
                         }
@@ -293,12 +292,12 @@ class Cpu {
                             //FX15	Timer	delay_timer(Vx)	Sets the delay timer to VX.
                             0x5-> {
                                 delayTimer = v[nib1].toInt()
-                                log(opcode, "delayTimer = v[nib1], UNTESTED")
+                                log(opcode, "delayTimer = v[nib1]")
                             }
                             //FX18	Sound	sound_timer(Vx)	Sets the sound timer to VX.
                             0x8-> {
                                 soundTimer = v[nib1].toInt()
-                                log(opcode, "soundTimer = v[nib1], UNTESTED")
+                                log(opcode, "soundTimer = v[nib1], NO SOUND IMPLEMENTED")
                             }
                             //FX1E	MEM	I += Vx	Adds VX to I. VF is not affected.
                             0xE-> {
@@ -383,10 +382,8 @@ class Cpu {
         updateTimers()
         //fetch opcode and decode
         //decode also functions as an execute
-        if (!keyHandler.waiting){
-            repeat(settings.ipf) {
-                decode(fetch())
-            }
+        repeat(settings.ipf) {
+            decode(fetch())
         }
     }
 

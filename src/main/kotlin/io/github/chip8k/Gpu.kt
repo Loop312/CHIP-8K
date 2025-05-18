@@ -50,6 +50,7 @@ class Gpu {
                 }
                 button.onMouseReleased = EventHandler {
                     keyHandler.keys[y * 4 + x] = false
+                    keyHandler.lastKeyPress = if (keyHandler.lastKeyPressRecorder) y * 4 + x else -1
                     cpu.log(0, "key " + (y * 4 + x).toString(16).uppercase() + " released")
                     screen.requestFocus()
                 }
