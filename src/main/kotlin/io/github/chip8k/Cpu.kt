@@ -149,16 +149,19 @@ class Cpu {
                     //8XY1	BitOp	Vx |= Vy	Sets VX to VX or VY. (bitwise OR operation).
                     0x1 -> {
                         v[nib1] = (v[nib1] or v[nib2])
+                        if (settings.vfReset) v[0xF] = 0.toUByte()
                         log(opcode, "v[nib1] |= v[nib2]")
                     }
                     //8XY2	BitOp	Vx &= Vy	Sets VX to VX and VY. (bitwise AND operation).
                     0x2 -> {
                         v[nib1] = (v[nib1] and v[nib2])
+                        if (settings.vfReset) v[0xF] = 0.toUByte()
                         log(opcode, "v[nib1] &= v[nib2]")
                     }
                     //8XY3	BitOp	Vx ^= Vy	Sets VX to VX xor VY.
                     0x3 -> {
                         v[nib1] = (v[nib1] xor v[nib2])
+                        if (settings.vfReset) v[0xF] = 0.toUByte()
                         log(opcode, "v[nib1] ^= v[nib2]")
                     }
                     //8XY4	Math	Vx += Vy	Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
@@ -177,6 +180,7 @@ class Cpu {
                     }
                     //8XY6	BitOp	Vx >>= 1	Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF.
                     0x6 -> {
+                        if (!settings.shifting) v[nib1] = v[nib2]
                         val temp = v[nib1] and 1.toUByte()
                         v[nib1] = (v[nib1].toUInt() shr 1).toUByte()
                         v[0xF] = temp
@@ -191,6 +195,7 @@ class Cpu {
                     }
                     //8XYE	BitOp	Vx <<= 1	Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset.
                     0xE -> {
+                        if (!settings.shifting) v[nib1] = v[nib2]
                         val temp = (v[nib1].toInt() shr 7).toUByte()
                         v[nib1] = (v[nib1].toInt() shl 1).toUByte()
                         v[0xF] = temp
@@ -214,7 +219,8 @@ class Cpu {
             }
             //BNNN	Flow	PC = V0 + NNN	Jumps to the address NNN plus V0.
             0xB -> {
-                jumpTo(v[0] + (opcode and 0x0FFF).toUInt())
+                if (settings.jumping) jumpTo(v[nib1] + (opcode and 0x0FFF).toUInt())
+                else jumpTo(v[0] + (opcode and 0x0FFF).toUInt())
                 log(opcode, "jump to v[0] + last 3 nibbles")
             }
             //CXNN	Rand	Vx = rand() & NN	Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
@@ -342,7 +348,8 @@ class Cpu {
                         //The offset from I is increased by 1 for each value written, but I itself is left unmodified.
                         if (nib3 == 0x5) {
                             for (j in 0..nib1) {
-                                memory[i.toInt() + j] = v[j]
+                                if (settings.memory) memory[i++.toInt()] = v[j]
+                                else memory[i.toInt() + j] = v[j]
                             }
                             log(opcode, "dump v[0..nib1] to memory")
                         }
@@ -354,7 +361,8 @@ class Cpu {
                         //The offset from I is increased by 1 for each value read, but I itself is left unmodified
                         if (nib3 == 0x5) {
                             for (j in 0..nib1) {
-                                v[j] = memory[i.toInt() + j]
+                                if (settings.memory) v[j] = memory[i++.toInt()]
+                                else v[j] = memory[i.toInt() + j]
                             }
                             log(opcode, "load v[0..nib1] from memory")
                         }

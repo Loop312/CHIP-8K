@@ -182,8 +182,17 @@ class Gpu {
 
             for (bit in 0 until 8) {
                 if ((spriteByte and (0x80 shr bit)) != 0) {
-                    val pixelX = (x + bit) % 64
-                    val pixelY = (y + row) % 32
+                    var pixelX = 0
+                    var pixelY = 0
+                    if (!settings.clipping) {
+                        pixelX = (x + bit) % 64
+                        pixelY = (y + row) % 32
+                    }
+                    else if (x + bit < 64 && y + row < 32) {
+                        pixelX = (x + bit)
+                        pixelY = (y + row)
+                    }
+
                     if (display[pixelX][pixelY]) {
                         cpu.v[0xF] = 1.toUByte() // Collision
                     }

@@ -25,6 +25,19 @@ class Settings {
     var delayInNs = (1_000_000_000 / fps)
     var ipf = 11
 
+    //v[0xF] = 0 from 8XY1 to 8XY3 (&,|,^ opcodes)
+    var vfReset = true
+    //i++ in FX55 and FX65 opcodes
+    var memory = true
+    //don't get fully
+    var displayWait = false
+    //cuts off the sprite at the edge
+    var clipping = true
+    //use Y in 8XY6 and 8XYE opcodes
+    var shifting = false
+
+    var jumping = false
+
     // Create a list of Stop objects for the gradient
     var stops = mutableListOf(
         Stop(0.0, color1.value),
@@ -91,18 +104,19 @@ class Settings {
         popup.background = Background(BackgroundFill(color2.value, null, null))
 
         // Add some content to the popup
-        val content = VBox(10.0)
-        content.alignment = Pos.CENTER
+        val generalSettings = VBox(10.0)
+        generalSettings.alignment = Pos.CENTER
+        val gsLabel = Label("General Settings")
+        gsLabel.textFill = Color.WHITE
         val colorPickerStyle = """
             -fx-color-rect: derive(-fx-base, -20%); /* Adjust the color of the rectangle */
             -fx-background-color: rgb(
              ${color2.value.red * 255},
              ${color2.value.green * 255},
              ${color2.value.blue * 255});
-            -fx-border-color: gray;
+            -fx-border-color: white;
             -fx-border-width: 1px;
             -fx-padding: 5px;
-            -fx-text-fill: white;
         """
         color1.onAction = EventHandler {
             colorChange()
@@ -120,6 +134,7 @@ class Settings {
         }
 
         val fpsLabel = Label("FPS: $fps")
+        fpsLabel.textFill = Color.WHITE
         val fpsSlider = Slider(1.0, 120.0, fps.toDouble())
         fpsSlider.valueProperty().addListener { _, _, newValue ->
             fps = newValue.toInt()
@@ -130,6 +145,7 @@ class Settings {
         }
 
         val ipfLabel = Label("IPF: $ipf")
+        ipfLabel.textFill = Color.WHITE
         val ipfSlider = Slider(1.0, 20.0, ipf.toDouble())
         ipfSlider.valueProperty().addListener { _, _, newValue ->
             ipf = newValue.toInt()
@@ -137,6 +153,7 @@ class Settings {
         }
 
         val logLinesLabel = Label("Log Lines: ${logHandler.maxLineCount}")
+        logLinesLabel.textFill = Color.WHITE
         val logLinesSlider = Slider(1.0, 200.0, logHandler.maxLineCount.toDouble())
         logLinesSlider.valueProperty().addListener { _, _, newValue ->
             logHandler.maxLineCount = newValue.toInt()
@@ -146,10 +163,9 @@ class Settings {
         closeButton.onAction = EventHandler {
             hidePopup()
         }
-        val greyBackground = Pane()
-        greyBackground.background = Background(BackgroundFill(Color.GRAY.deriveColor(0.0, 0.0, 0.0, 1.0), null, null))
 
-        content.children.addAll(
+        generalSettings.children.addAll(
+            gsLabel,
             color1,
             color2,
             fpsLabel,
@@ -162,8 +178,35 @@ class Settings {
             closeButton
         )
 
-        popup.add(content, 0, 0)
-        popup.add(greyBackground, 1, 0)
+        val presets = VBox(10.0)
+        presets.alignment = Pos.TOP_CENTER
+        val presetsLabel = Label("Presets")
+        presetsLabel.textFill = Color.WHITE
+        val chip8 = Button("CHIP-8")
+        chip8.background = Background(BackgroundFill(gradient, null, null))
+        chip8.onAction = EventHandler {
+            handleEmulationPreset("chip-8")
+        }
+        val superChipM = Button("Super-CHIP M")
+        superChipM.background = Background(BackgroundFill(gradient, null, null))
+        superChipM.onAction = EventHandler {
+            handleEmulationPreset("super-chip M")
+        }
+        val superChipL = Button("Super-CHIP L")
+        superChipL.background = Background(BackgroundFill(gradient, null, null))
+        superChipL.onAction = EventHandler {
+            handleEmulationPreset("super-chip L")
+        }
+        val xoChip = Button("XO-CHIP")
+        xoChip.background = Background(BackgroundFill(gradient, null, null))
+        xoChip.onAction = EventHandler {
+            handleEmulationPreset("xo-chip")
+        }
+        presets.children.addAll(presetsLabel, chip8, superChipM, superChipL, xoChip)
+
+        popup.hgap = 10.0
+        popup.add(generalSettings, 0, 0)
+        popup.add(presets, 1, 0)
         //popup.alignment = Pos.CENTER_LEFT
         slideOut(popup)
         return popup
@@ -215,5 +258,65 @@ class Settings {
 
     fun delayInNs(): Int {
         return (1_000_000_000 / fps)
+    }
+
+    fun handleEmulationPreset(preset: String) {
+        when (preset) {
+            "chip-8" -> {
+                //v[0xF] = 0 from 8XY1 to 8XY3 (&,|,^ opcodes)
+                vfReset = true
+                //i++ in FX55 and FX65 opcodes
+                memory = true
+                //
+                displayWait = true
+                //cuts off the sprite at the edge
+                clipping = true
+                //use Y in 8XY6 and 8XYE opcodes
+                shifting = false
+                jumping = false
+            }
+            "super-chip M" -> {
+                //v[0xF] = 0 from 8XY1 to 8XY3 (&,|,^ opcodes)
+                vfReset = false
+                //i++ in FX55 and FX65 opcodes
+                memory = false
+                //
+                displayWait = true
+                //cuts off the sprite at the edge
+                clipping = true
+                //use Y in 8XY6 and 8XYE opcodes
+                shifting = true
+                jumping = true
+            }
+            "super-chip L" -> {
+                //v[0xF] = 0 from 8XY1 to 8XY3 (&,|,^ opcodes)
+                vfReset = false
+                //i++ in FX55 and FX65 opcodes
+                memory = false
+                //
+                displayWait = false
+                //cuts off the sprite at the edge
+                clipping = true
+                //use Y in 8XY6 and 8XYE opcodes
+                shifting = true
+                //
+                jumping = true
+            }
+            "xo-chip" -> {
+                //v[0xF] = 0 from 8XY1 to 8XY3 (&,|,^ opcodes)
+                vfReset = false
+                //i++ in FX55 and FX65 opcodes
+                memory = true
+                //
+                displayWait = false
+                //cuts off the sprite at the edge
+                clipping = false
+                //use Y in 8XY6 and 8XYE opcodes
+                shifting = false
+                //
+                jumping = false
+            }
+        }
+
     }
 }
