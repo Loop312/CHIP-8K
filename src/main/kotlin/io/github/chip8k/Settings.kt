@@ -162,14 +162,14 @@ class Settings {
 
     fun showPopup() {
         cpu.log(0, "settings opened, emulation paused")
-        gpu.handleLogs()
+        logHandler.handleLogs()
         paused = true
         slideIn(popup)
     }
 
     fun hidePopup() {
         cpu.log(0, "settings closed, emulation resumed")
-        gpu.handleLogs()
+        logHandler.handleLogs()
         paused = false
         slideOut(popup)
     }

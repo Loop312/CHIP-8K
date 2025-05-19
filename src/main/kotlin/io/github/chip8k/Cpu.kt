@@ -49,7 +49,6 @@ class Cpu {
         0xF0.toUByte(), 0x80.toUByte(), 0xF0.toUByte(), 0x80.toUByte(), 0xF0.toUByte(), // E
         0xF0.toUByte(), 0x80.toUByte(), 0xF0.toUByte(), 0x80.toUByte(), 0x80.toUByte()  // F
     )
-    var log = ""
 
     //loads font into memory
     init {
@@ -498,7 +497,7 @@ class Cpu {
     }
 
     fun log(opcode: Int, description: String) {
-        log = "opcode: 0x" + opcode.toString(16).uppercase() + "      description: " + description
-        println(log)
+        logHandler.log = "opcode: 0x" + opcode.toString(16).uppercase() + "      description: " + description
+        println(logHandler.log)
     }
 }

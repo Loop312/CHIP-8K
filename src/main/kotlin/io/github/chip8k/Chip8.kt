@@ -11,9 +11,9 @@ var paused = false
 lateinit var loadedRom: ByteArray
 val cpu = Cpu()
 val settings = Settings()
+val logHandler = LogHandler()
 val gpu = Gpu()
 val keyHandler = KeyHandler()
-
 
 class Chip8 : Application() {
 
@@ -39,7 +39,7 @@ class Chip8 : Application() {
                 override fun handle(now: Long) {
                     if (now - lastUpdateTime >= settings.delayInNs) {
                         if (running && !paused) {
-                            gpu.handleLogs()
+                            logHandler.handleLogs()
                             cpu.runCycle()
                             gpu.updateDisplay()
                             gpu.liveStats.update(now - lastUpdateTime)

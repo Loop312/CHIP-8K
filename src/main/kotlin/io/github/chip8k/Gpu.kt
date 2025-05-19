@@ -5,7 +5,6 @@ import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.Button
-import javafx.scene.control.TextArea
 import javafx.scene.layout.Background
 import javafx.scene.layout.BackgroundFill
 import javafx.scene.layout.GridPane
@@ -24,7 +23,6 @@ class Gpu {
     //actual display
     val screen = Canvas(64 * settings.scale, 32 * settings.scale)
     //log of opcodes that are going through
-    val opcodeTextArea = TextArea()
 
     //
     val keypadAndStatsBox = VBox()
@@ -85,7 +83,7 @@ class Gpu {
         powerButton.onAction = EventHandler {
             if (running) {
                 cpu.log(0, "powering off")
-                handleLogs()
+                logHandler.handleLogs()
                 cpu.reset()
                 running = false
             }
@@ -102,7 +100,7 @@ class Gpu {
         buttons += restartButton
         restartButton.onAction = EventHandler {
             cpu.log(0, "restarting")
-            handleLogs()
+            logHandler.handleLogs()
             running = false
             cpu.reset()
             cpu.loadProgram(loadedRom.toUByteArray())
@@ -170,7 +168,7 @@ class Gpu {
 
         updateAllGraphics()
         mainScreen.add(screen, 0, 0)
-        mainScreen.add(opcodeTextArea, 0, 1)
+        mainScreen.add(logHandler.textArea, 0, 1)
         mainScreen.add(keypadAndStatsBox, 1, 1)
         mainScreen.add(menuScreen, 1, 0)
         screen.requestFocus()
@@ -211,16 +209,11 @@ class Gpu {
         }
     }
 
-    fun handleLogs() {
-        val scrollTop = opcodeTextArea.scrollTop // Get the current vertical scroll position
-        opcodeTextArea.appendText(cpu.log + "\n")
-        opcodeTextArea.scrollTop = scrollTop // Restore the previous vertical scroll position
-    }
 
     fun togglePause() {
         if (!paused) {
             cpu.log(0, "emulation paused")
-            handleLogs()
+            logHandler.handleLogs()
             paused = true
         }
         else {
@@ -231,7 +224,7 @@ class Gpu {
 
     fun updateAllGraphics() {
         mainScreen.background = Background(BackgroundFill(settings.color2.value, null, null))
-        opcodeTextArea.style = """
+        logHandler.textArea.style = """
         -fx-control-inner-background: rgb(
          ${settings.color2.value.red * 255},
          ${settings.color2.value.green * 255},
