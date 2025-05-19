@@ -10,8 +10,8 @@ var running = false
 var paused = false
 lateinit var loadedRom: ByteArray
 val cpu = Cpu()
-val settings = Settings()
 val logHandler = LogHandler()
+val settings = Settings()
 val gpu = Gpu()
 val keyHandler = KeyHandler()
 

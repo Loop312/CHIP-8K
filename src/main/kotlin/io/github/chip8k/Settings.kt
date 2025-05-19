@@ -120,7 +120,7 @@ class Settings {
         }
 
         val fpsLabel = Label("FPS: $fps")
-        val fpsSlider = Slider(1.0, 120.0, 60.0)
+        val fpsSlider = Slider(1.0, 120.0, fps.toDouble())
         fpsSlider.valueProperty().addListener { _, _, newValue ->
             fps = newValue.toInt()
             fpsLabel.text = "FPS: $fps"
@@ -130,10 +130,17 @@ class Settings {
         }
 
         val ipfLabel = Label("IPF: $ipf")
-        val ipfSlider = Slider(1.0, 20.0, 11.0)
+        val ipfSlider = Slider(1.0, 20.0, ipf.toDouble())
         ipfSlider.valueProperty().addListener { _, _, newValue ->
             ipf = newValue.toInt()
             ipfLabel.text = "IPF: $ipf"
+        }
+
+        val logLinesLabel = Label("Log Lines: ${logHandler.maxLineCount}")
+        val logLinesSlider = Slider(1.0, 200.0, logHandler.maxLineCount.toDouble())
+        logLinesSlider.valueProperty().addListener { _, _, newValue ->
+            logHandler.maxLineCount = newValue.toInt()
+            logLinesLabel.text = "Log Lines: ${logHandler.maxLineCount}"
         }
         val closeButton = Button("Close")
         closeButton.onAction = EventHandler {
@@ -149,6 +156,8 @@ class Settings {
             fpsSlider,
             ipfLabel,
             ipfSlider,
+            logLinesLabel,
+            logLinesSlider,
             resetSettingsButton,
             closeButton
         )
