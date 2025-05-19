@@ -10,6 +10,8 @@ import javafx.scene.paint.RadialGradient
 import javafx.scene.paint.Stop
 import javafx.scene.control.Button
 import javafx.scene.control.ColorPicker
+import javafx.scene.control.Label
+import javafx.scene.control.Slider
 import javafx.scene.layout.Background
 import javafx.scene.layout.BackgroundFill
 import javafx.scene.layout.GridPane
@@ -74,9 +76,9 @@ class Settings {
             stops
         )
         fps = 60
-        delayInNs = (1_000_000_000 / fps)
-
-        //popup = createPopupPane()
+        delayInNs = delayInNs()
+        ipf = 11
+        cpu.log(0, "settings reset")
         gpu.updateAllGraphics()
     }
 
@@ -103,36 +105,10 @@ class Settings {
             -fx-text-fill: white;
         """
         color1.onAction = EventHandler {
-            color1.value = color1.value
-            stops = mutableListOf(
-                Stop(0.0, color1.value),
-                Stop(0.5, color2.value)
-            )
-            gradient = RadialGradient(
-                0.0, 0.0, // focusAngle, focusDistance
-                0.5, 0.5, // centerX, centerY
-                1.25, // radius
-                true, // proportional
-                null, // cycleMethod
-                stops
-            )
-            gpu.updateAllGraphics()
+            colorChange()
         }
         color2.onAction = EventHandler {
-            color2.value = color2.value
-            stops = mutableListOf(
-                Stop(0.0, color1.value),
-                Stop(0.5, color2.value)
-            )
-            gradient = RadialGradient(
-                0.0, 0.0, // focusAngle, focusDistance
-                0.5, 0.5, // centerX, centerY
-                1.25, // radius
-                true, // proportional
-                null, // cycleMethod
-                stops
-            )
-            gpu.updateAllGraphics()
+            colorChange()
         }
         color1.style = colorPickerStyle
         color2.style = colorPickerStyle
@@ -142,6 +118,23 @@ class Settings {
             hidePopup()
             reset()
         }
+
+        val fpsLabel = Label("FPS: $fps")
+        val fpsSlider = Slider(1.0, 120.0, 60.0)
+        fpsSlider.valueProperty().addListener { _, _, newValue ->
+            fps = newValue.toInt()
+            fpsLabel.text = "FPS: $fps"
+            delayInNs = delayInNs()
+            println("fps: $fps")
+            println("delayInNs: $delayInNs")
+        }
+
+        val ipfLabel = Label("IPF: $ipf")
+        val ipfSlider = Slider(1.0, 20.0, 11.0)
+        ipfSlider.valueProperty().addListener { _, _, newValue ->
+            ipf = newValue.toInt()
+            ipfLabel.text = "IPF: $ipf"
+        }
         val closeButton = Button("Close")
         closeButton.onAction = EventHandler {
             hidePopup()
@@ -149,7 +142,16 @@ class Settings {
         val greyBackground = Pane()
         greyBackground.background = Background(BackgroundFill(Color.GRAY.deriveColor(0.0, 0.0, 0.0, 1.0), null, null))
 
-        content.children.addAll(color1, color2, resetSettingsButton, closeButton)
+        content.children.addAll(
+            color1,
+            color2,
+            fpsLabel,
+            fpsSlider,
+            ipfLabel,
+            ipfSlider,
+            resetSettingsButton,
+            closeButton
+        )
 
         popup.add(content, 0, 0)
         popup.add(greyBackground, 1, 0)
@@ -182,5 +184,27 @@ class Settings {
         val transition = TranslateTransition(Duration.millis(500.0), pane)
         transition.toX = targetX
         transition.play()
+    }
+
+    private fun colorChange() {
+        color1.value = color1.value
+        color2.value = color2.value
+        stops = mutableListOf(
+            Stop(0.0, color1.value),
+            Stop(0.5, color2.value)
+        )
+        gradient = RadialGradient(
+            0.0, 0.0, // focusAngle, focusDistance
+            0.5, 0.5, // centerX, centerY
+            1.25, // radius
+            true, // proportional
+            null, // cycleMethod
+            stops
+        )
+        gpu.updateAllGraphics()
+    }
+
+    fun delayInNs(): Int {
+        return (1_000_000_000 / fps)
     }
 }
