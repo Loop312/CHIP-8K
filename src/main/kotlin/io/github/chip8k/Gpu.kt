@@ -25,6 +25,9 @@ class Gpu {
     val screen = Canvas(64 * settings.scale, 32 * settings.scale)
     //log of opcodes that are going through
     val opcodeTextArea = TextArea()
+
+    //
+    val keypadAndStatsBox = VBox()
     //buttons (4x6 grid)
     val keypadScreen = GridPane()
     //power and load another rom buttons
@@ -32,13 +35,16 @@ class Gpu {
 
     var buttons = emptyArray<Button>()
 
+    val liveStats = LiveStats()
     val mainScreen = GridPane()
     val root = StackPane(mainScreen, settings.popup)
     val scene = Scene(root)
 
+
     init {
+
         //buttons (4x4 grid) (need to change the order of the buttons)
-        keypadScreen.alignment = Pos.BOTTOM_CENTER
+        //keypadScreen.alignment = Pos.BOTTOM_CENTER
         for (y in 0 until 4) {
             for (x in 0 until 4) {
                 val button = Button ((y * 4 + x).toString(16).uppercase())
@@ -56,6 +62,7 @@ class Gpu {
                 keypadScreen.add(button, x, y)
             }
         }
+        keypadAndStatsBox.children.addAll(liveStats.box, keypadScreen)
         //buttons
         menuScreen.alignment = Pos.BOTTOM_CENTER
         val saveButton = Button("save state")
@@ -164,7 +171,7 @@ class Gpu {
         updateAllGraphics()
         mainScreen.add(screen, 0, 0)
         mainScreen.add(opcodeTextArea, 0, 1)
-        mainScreen.add(keypadScreen, 1, 1)
+        mainScreen.add(keypadAndStatsBox, 1, 1)
         mainScreen.add(menuScreen, 1, 0)
         screen.requestFocus()
     }
@@ -240,6 +247,9 @@ class Gpu {
             button.background = Background(BackgroundFill(settings.gradient, null, null))
             button.textFill = settings.color2.value
         }
+
+        liveStats.updateColors()
+
         updateDisplay()
     }
 }

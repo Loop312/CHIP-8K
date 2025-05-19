@@ -42,6 +42,7 @@ class Chip8 : Application() {
                             gpu.handleLogs()
                             cpu.runCycle()
                             gpu.updateDisplay()
+                            gpu.liveStats.update(now - lastUpdateTime)
                             lastUpdateTime = now
                         }
                     }
