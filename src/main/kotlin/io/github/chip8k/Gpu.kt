@@ -11,7 +11,6 @@ import javafx.scene.layout.BackgroundFill
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.StackPane
 import javafx.scene.layout.VBox
-import javafx.scene.paint.Color
 import javafx.stage.FileChooser
 import java.io.File
 
@@ -144,11 +143,9 @@ class Gpu {
         toggleThemeButton.minWidth = 100.0
         buttons += toggleThemeButton
         toggleThemeButton.onAction = EventHandler {
-            if (settings.colours.first == Color.WHITE) {
-                settings.colours = Pair(Color.BLACK, Color.WHITE)
-            } else {
-                settings.colours = Pair(Color.WHITE, Color.BLACK)
-            }
+            val temp = Pair(settings.color1, settings.color2)
+            settings.color1 = temp.second
+            settings.color2 = temp.first
             settings.flipStops()
             updateAllGraphics()
             screen.requestFocus()
@@ -198,9 +195,9 @@ class Gpu {
         for (y in 0 until 32) {
             for (x in 0 until 64) {
                 if (display[x][y]) {
-                    gc.fill = settings.colours.first
+                    gc.fill = settings.color1.value
                 } else {
-                    gc.fill = settings.colours.second
+                    gc.fill = settings.color2.value
                 }
                 gc.fillRect(x * settings.scale, y * settings.scale, settings.scale, settings.scale)
             }
@@ -226,21 +223,22 @@ class Gpu {
     }
 
     fun updateAllGraphics() {
-        mainScreen.background = Background(BackgroundFill(settings.colours.second, null, null))
+        mainScreen.background = Background(BackgroundFill(settings.color2.value, null, null))
         opcodeTextArea.style = """
         -fx-control-inner-background: rgb(
-         ${settings.colours.second.red * 255},
-         ${settings.colours.second.green * 255},
-         ${settings.colours.second.blue * 255});
+         ${settings.color2.value.red * 255},
+         ${settings.color2.value.green * 255},
+         ${settings.color2.value.blue * 255});
 
         -fx-text-fill: rgb(
-        ${settings.colours.first.red * 255},
-        ${settings.colours.first.green * 255},
-        ${settings.colours.first.blue * 255});
+        ${settings.color1.value.red * 255},
+        ${settings.color1.value.green * 255},
+        ${settings.color1.value.blue * 255});
     """.trimIndent()
+
         for (button in buttons) {
             button.background = Background(BackgroundFill(settings.gradient, null, null))
-            button.textFill = settings.colours.second
+            button.textFill = settings.color2.value
         }
         updateDisplay()
     }
