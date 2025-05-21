@@ -29,8 +29,8 @@ class Settings {
     var vfReset = true
     //i++ in FX55 and FX65 opcodes
     var memory = true
-    //don't get fully
-    var displayWait = false
+    //
+    var displayWait = true
     //cuts off the sprite at the edge
     var clipping = true
     //use Y in 8XY6 and 8XYE opcodes
@@ -281,7 +281,7 @@ class Settings {
                 //i++ in FX55 and FX65 opcodes
                 memory = false
                 //
-                displayWait = true
+                displayWait = false
                 //cuts off the sprite at the edge
                 clipping = true
                 //use Y in 8XY6 and 8XYE opcodes
@@ -294,7 +294,7 @@ class Settings {
                 //i++ in FX55 and FX65 opcodes
                 memory = false
                 //
-                displayWait = false
+                displayWait = true
                 //cuts off the sprite at the edge
                 clipping = true
                 //use Y in 8XY6 and 8XYE opcodes

@@ -389,8 +389,10 @@ class Cpu {
         updateTimers()
         //fetch opcode and decode
         //decode also functions as an execute
-        repeat(settings.ipf) {
-            decode(fetch())
+        for (i in 0 until settings.ipf) {
+            val opcode = fetch()
+            decode(opcode)
+            if (settings.displayWait && (opcode and 0xF000) == 0xD000) break
         }
     }
 
