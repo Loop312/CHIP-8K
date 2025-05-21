@@ -146,7 +146,7 @@ class Settings {
 
         val ipfLabel = Label("IPF: $ipf")
         ipfLabel.textFill = Color.WHITE
-        val ipfSlider = Slider(1.0, 20.0, ipf.toDouble())
+        val ipfSlider = Slider(1.0, 100.0, ipf.toDouble())
         ipfSlider.valueProperty().addListener { _, _, newValue ->
             ipf = newValue.toInt()
             ipfLabel.text = "IPF: $ipf"
